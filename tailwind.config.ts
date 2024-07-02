@@ -13,10 +13,6 @@ const config: Config = {
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
-      fontFamily: {
-        heading: ["Shrikhand"],
-        paragraph: ["Montserrat"],
-      },
       colors: {
         orange: "#EB841A",
         gray: "#9F9B9B",
