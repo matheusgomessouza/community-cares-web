@@ -1,4 +1,5 @@
 import ButtonComponent from "@/components/Button/ButtonComponent";
+import { Suspense } from "react";
 
 export default function Home() {
   return (
@@ -6,7 +7,9 @@ export default function Home() {
       <h1 className="text-orange text-4xl">Community Cares</h1>
       <section className="mt-auto text-center">
         <p className="text-gray mb-6">Login with</p>
-        <ButtonComponent />
+        <Suspense>
+          <ButtonComponent />
+        </Suspense>
       </section>
     </main>
   );
