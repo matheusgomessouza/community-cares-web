@@ -7,10 +7,14 @@ export default function Home() {
       <h1 className="text-orange text-4xl">Community Cares</h1>
       <section className="mt-auto text-center">
         <p className="text-gray mb-6">Login with</p>
-        <Suspense>
+        <Suspense fallback={<Loading />}>
           <ButtonComponent />
         </Suspense>
       </section>
     </main>
   );
+}
+
+function Loading() {
+  return <p>Loading...</p>;
 }
