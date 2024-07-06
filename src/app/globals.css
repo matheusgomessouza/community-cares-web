@@ -30,8 +30,17 @@ h1 {
   font-family: var(--font-heading);
 }
 
-p {
+p, label {
   font-family: var(--font-paragraph);
+}
+
+select::after {
+  content: '\25BC'; /* Unicode arrow-down character */
+  position: absolute;
+  top: 50%;
+  right: 3px;
+  transform: translateY(-50%);
+  pointer-events: none; /* Ensure the arrow doesn't interfere with clicking */
 }
 
 @layer utilities {
