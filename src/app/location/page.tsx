@@ -6,10 +6,10 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import * as interfaces from "@/interfaces/index";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { githubInstance } from "@/lib/github";
+import axios from "axios";
 
 export default function Location() {
-  const [githubUserData, setGithubUserData] = useState();
+  const [githubUserData, setGithubUserData] = useState<string>();
   const { handleSubmit } = useForm<interfaces.LocationInputProps>();
   const onSubmit: SubmitHandler<interfaces.LocationInputProps> = (data) =>
     console.log(data);
@@ -20,10 +20,9 @@ export default function Location() {
       const token = localStorage.getItem("github-token");
 
       if (token) {
-        const { data } = await githubInstance.get("/user", {
+        const { data } = await axios.get("https://api.github.com/user", {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Access-Control-Allow-Origin": "*",
           },
         });
 
@@ -37,7 +36,7 @@ export default function Location() {
   useEffect(() => {
     getUserData().then((res) => {
       if (res) {
-        console.log(res);
+        setGithubUserData(res.avatar_url);
       }
     });
   }, []);
@@ -50,7 +49,7 @@ export default function Location() {
         </h1>
 
         <Image
-          src=""
+          src={githubUserData ? githubUserData : ""}
           alt=""
           className="bg-gray rounded-full cursor-pointer"
           width={64}
