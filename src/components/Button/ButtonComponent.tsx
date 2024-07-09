@@ -1,16 +1,18 @@
 "use client";
 
 import axios from "axios";
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { IoLogoGithub } from "react-icons/io";
 
 export default function ButtonComponent() {
+  const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
   const params = useSearchParams();
   const router = useRouter();
 
   const authenticateWithGithub = useCallback(async () => {
     try {
+      setIsAuthenticating(true);
       const code = params.get("code");
 
       if (code) {
@@ -28,10 +30,13 @@ export default function ButtonComponent() {
         }
       }
     } catch (error) {
+      setIsAuthenticating(false);
       console.error(
         "Unable to retrieve access_token from Community Cares Server [authenticateWithGithub]",
         error
       );
+    } finally {
+      setIsAuthenticating(false);
     }
   }, [params, router]);
 
@@ -49,8 +54,30 @@ export default function ButtonComponent() {
         );
       }}
     >
-      <p className="font-semibold">Github</p>
-      <IoLogoGithub size={24} />
+      {isAuthenticating ? (
+        <>
+          <svg
+            width="100"
+            height="100"
+            className="animate-spin h-5 w-5 mr-3 border-white rounded-full border-4 border-dotted"
+          >
+            <circle
+              cx="50"
+              cy="50"
+              r="40"
+              stroke="green"
+              stroke-width="4"
+              fill="yellow"
+            />
+          </svg>
+          <p className="font-semibold">Authenticating</p>
+        </>
+      ) : (
+        <>
+          <p className="font-semibold">Github</p>
+          <IoLogoGithub size={24} />
+        </>
+      )}
     </button>
   );
 }
