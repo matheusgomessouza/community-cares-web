@@ -45,7 +45,7 @@ export default function ProfileBoxContainer({
     >
       <section className="flex justify-end gap-2 items-center">
         <h2
-          className="text-orange font-bold cursor-pointer"
+          className="text-orange font-medium cursor-pointer text-sm"
           onClick={() => {
             localStorage.removeItem("github-token");
             router.push("/");
@@ -53,7 +53,7 @@ export default function ProfileBoxContainer({
         >
           Log out
         </h2>
-        <FaPowerOff size={16} fill="#eb841a" className="cursor-pointer" />
+        <FaPowerOff size={12} fill="#eb841a" className="cursor-pointer" />
       </section>
     </div>
   );

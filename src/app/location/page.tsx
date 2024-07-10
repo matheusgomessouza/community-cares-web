@@ -4,11 +4,12 @@ import Image from "next/image";
 import { IoIosSend } from "react-icons/io";
 import { useForm, SubmitHandler } from "react-hook-form";
 import * as interfaces from "@/interfaces/index";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import ProfileBoxContainer from "@/components/ProfileBoxContainer.tsx/ProfileBoxContainer";
 
 export default function Location() {
+  const imageRef = useRef<HTMLImageElement>(null);
   const [githubUserData, setGithubUserData] = useState<{
     name: string;
     avatar_url: string;
@@ -49,12 +50,27 @@ export default function Location() {
         });
       }
     });
+
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        imageRef.current &&
+        !imageRef.current.contains(event.target as Node)
+      ) {
+        setHover(false);
+      }
+    }
+
+    document.addEventListener("click", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
   }, []);
 
   return (
     <main className="p-10">
-      <header className="w-full flex justify-between items-center">
-        <h1 className="text-orange text-2xl text-center w-full">
+      <header className="relative w-full flex justify-end items-center">
+        <h1 className="absolute text-orange text-2xl text-center w-full">
           Share a location
         </h1>
 
@@ -66,6 +82,7 @@ export default function Location() {
             width={64}
             height={64}
             onMouseOver={() => setHover(true)}
+            ref={imageRef}
           />
           <ProfileBoxContainer isHovered={hover} />
         </div>
