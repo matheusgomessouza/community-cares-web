@@ -5,15 +5,21 @@ import { IoIosSend } from "react-icons/io";
 import { useForm, SubmitHandler } from "react-hook-form";
 import * as interfaces from "@/interfaces/index";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import axios from "axios";
+import ProfileBoxContainer from "@/components/ProfileBoxContainer.tsx/ProfileBoxContainer";
 
 export default function Location() {
-  const [githubUserData, setGithubUserData] = useState<string>();
+  const [githubUserData, setGithubUserData] = useState<{
+    name: string;
+    avatar_url: string;
+  }>({
+    name: "",
+    avatar_url: "",
+  });
+  const [hover, setHover] = useState<boolean>(false);
   const { handleSubmit } = useForm<interfaces.LocationInputProps>();
   const onSubmit: SubmitHandler<interfaces.LocationInputProps> = (data) =>
     console.log(data);
-  const router = useRouter();
 
   async function getUserData() {
     try {
@@ -36,7 +42,11 @@ export default function Location() {
   useEffect(() => {
     getUserData().then((res) => {
       if (res) {
-        setGithubUserData(res.avatar_url);
+        console.log(res);
+        setGithubUserData({
+          name: res.name,
+          avatar_url: res.avatar_url,
+        });
       }
     });
   }, []);
@@ -48,17 +58,17 @@ export default function Location() {
           Share a location
         </h1>
 
-        <Image
-          src={githubUserData ? githubUserData : ""}
-          alt=""
-          className="bg-gray rounded-full cursor-pointer"
-          width={64}
-          height={64}
-          onClick={() => {
-            localStorage.removeItem("github-token");
-            router.push("/");
-          }}
-        />
+        <div className="relative flex flex-col items-end">
+          <Image
+            src={githubUserData ? githubUserData.avatar_url : ""}
+            alt={githubUserData.name}
+            className="bg-orange rounded-full cursor-pointer"
+            width={64}
+            height={64}
+            onMouseOver={() => setHover(true)}
+          />
+          <ProfileBoxContainer isHovered={hover} />
+        </div>
       </header>
       <form
         onSubmit={handleSubmit(onSubmit)}
