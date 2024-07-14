@@ -5,7 +5,7 @@ import { useEffect, useCallback, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { IoLogoGithub } from "react-icons/io";
 
-export default function ButtonComponent() {
+export default function GitHubButtonComponent() {
   const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
   const [errorOnRequest, setErrorOnRequest] = useState<boolean>(false);
   const params = useSearchParams();

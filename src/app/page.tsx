@@ -1,4 +1,5 @@
-import ButtonComponent from "@/components/Button/ButtonComponent";
+import GitHubButtonComponent from "@/components/Button/GitHubButtonComponent";
+import GoogleButtonComponent from "@/components/Button/GoogleButtonComponent";
 import { Suspense } from "react";
 
 export default function Home() {
@@ -8,7 +9,8 @@ export default function Home() {
       <section className="mt-auto text-center">
         <p className="text-gray mb-6">Login with</p>
         <Suspense fallback={<Loading />}>
-          <ButtonComponent />
+          <GitHubButtonComponent />
+          <GoogleButtonComponent />
         </Suspense>
       </section>
     </main>
