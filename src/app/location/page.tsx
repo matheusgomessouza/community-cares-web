@@ -1,11 +1,11 @@
 "use client";
 
+import axios from "axios";
 import Image from "next/image";
 import { IoIosSend } from "react-icons/io";
 import { useForm, SubmitHandler } from "react-hook-form";
 import * as interfaces from "@/interfaces/index";
 import { useEffect, useState, useRef } from "react";
-import axios from "axios";
 import ProfileBoxContainer from "@/components/ProfileBoxContainer.tsx/ProfileBoxContainer";
 
 export default function Location() {
@@ -18,9 +18,35 @@ export default function Location() {
     avatar_url: "",
   });
   const [hover, setHover] = useState<boolean>(false);
-  const { handleSubmit } = useForm<interfaces.LocationInputProps>();
+  const { handleSubmit, register } = useForm<interfaces.LocationInputProps>();
   const onSubmit: SubmitHandler<interfaces.LocationInputProps> = (data) =>
-    console.log(data);
+    postLocation(data);
+
+  async function postLocation(data: interfaces.LocationInputProps) {
+    try {
+      const token = localStorage.getItem("github-token");
+
+      if (token) {
+        await axios.post(
+          "https://community-cares-server.onrender.com/location",
+          {
+            name: data.name,
+            type: data.type,
+            address: data.address,
+            contact: data.telephone,
+            coords: data.coords,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      }
+    } catch (error) {
+      console.error("Unable to post new location /postLocation");
+    }
+  }
 
   async function getUserData() {
     try {
@@ -43,7 +69,6 @@ export default function Location() {
   useEffect(() => {
     getUserData().then((res) => {
       if (res) {
-        console.log(res);
         setGithubUserData({
           name: res.name,
           avatar_url: res.avatar_url,
@@ -68,7 +93,7 @@ export default function Location() {
   }, []);
 
   return (
-    <main className="p-10">
+    <main className="p-10 bg-white">
       <header className="relative w-full flex justify-end items-center">
         <h1 className="absolute text-orange text-2xl text-center w-full">
           Share a location
@@ -99,10 +124,8 @@ export default function Location() {
         </label>
         <input
           type="text"
-          name="establishment-name"
           required
-          value={""}
-          onChange={() => {}}
+          {...register("name")}
           placeholder="Establishment name"
           className="outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
         />
@@ -114,7 +137,7 @@ export default function Location() {
           Type
         </label>
         <select
-          name="establishment-type"
+          {...register("type")}
           className="outline-orange text-gray border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10 relative"
         >
           <option value="" className="text-gray">
@@ -142,10 +165,8 @@ export default function Location() {
         </label>
         <input
           type="text"
-          name="establishment-address"
           required
-          value={""}
-          onChange={() => {}}
+          {...register("address")}
           placeholder="Establishment address"
           className="outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
         />
@@ -158,10 +179,8 @@ export default function Location() {
         </label>
         <input
           type="text"
-          name="establishment-telephone"
           required
-          value={""}
-          onChange={() => {}}
+          {...register("telephone")}
           placeholder="Establishment telephone"
           className="outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
         />
@@ -169,19 +188,15 @@ export default function Location() {
         <label className="text-orange font-bold mb-2">Coordinates</label>
         <input
           type="text"
-          name="establishment-latitude"
           required
-          value={""}
-          onChange={() => {}}
+          {...register("coords.latitude")}
           placeholder="Latitude"
           className="outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-5"
         />
         <input
           type="text"
-          name="establishment-longitude"
           required
-          value={""}
-          onChange={() => {}}
+          {...register("coords.longitude")}
           placeholder="Longitude"
           className="outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
         />
@@ -189,8 +204,8 @@ export default function Location() {
           type="submit"
           className="bg-orange rounded-lg h-10 flex items-center justify-center gap-2 w-24 ml-auto"
         >
-          <p className="font-bold">Send</p>
-          <IoIosSend />
+          <p className="font-bold text-white">Send</p>
+          <IoIosSend fill="white" />
         </button>
       </form>
     </main>

@@ -71,12 +71,12 @@ export default function GoogleButtonComponent() {
                 fill="yellow"
               />
             </svg>
-            <p className="font-semibold">Authenticating</p>
+            <p className="font-semibold text-white">Authenticating</p>
           </>
         ) : (
           <>
-            <p className="font-semibold">Google</p>
-            <IoLogoGoogle size={20} />
+            <p className="font-semibold text-white">Google</p>
+            <IoLogoGoogle size={20} fill="white" />
           </>
         )}
       </button>

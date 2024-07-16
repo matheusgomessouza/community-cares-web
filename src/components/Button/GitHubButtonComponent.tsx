@@ -69,20 +69,24 @@ export default function GitHubButtonComponent() {
                 cy="50"
                 r="40"
                 stroke="green"
-                stroke-width="4"
+                strokeWidth="4"
                 fill="yellow"
               />
             </svg>
-            <p className="font-semibold">Authenticating</p>
+            <p className="font-semibold text-white">Authenticating</p>
           </>
         ) : (
           <>
-            <p className="font-semibold">Github</p>
-            <IoLogoGithub size={24} />
+            <p className="font-semibold text-white">Github</p>
+            <IoLogoGithub size={24} fill="white" />
           </>
         )}
       </button>
-      {errorOnRequest && <p className="text-red-600 font-bold mt-4">Error on the authentication request</p>}
+      {errorOnRequest && (
+        <p className="text-red-600 font-bold mt-4">
+          Error on the authentication request
+        </p>
+      )}
     </>
   );
 }
