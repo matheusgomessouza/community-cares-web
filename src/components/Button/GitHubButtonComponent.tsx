@@ -59,6 +59,7 @@ export default function GitHubButtonComponent() {
       >
         {isAuthenticating ? (
           <>
+            <p className="font-semibold text-white">Authenticating</p>
             <svg
               width="100"
               height="100"
@@ -73,7 +74,6 @@ export default function GitHubButtonComponent() {
                 fill="yellow"
               />
             </svg>
-            <p className="font-semibold text-white">Authenticating</p>
           </>
         ) : (
           <>
