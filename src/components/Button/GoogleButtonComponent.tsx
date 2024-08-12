@@ -1,24 +1,42 @@
 "use client";
 
-import { useGoogleLogin } from "@react-oauth/google";
 import { useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { IoLogoGoogle } from "react-icons/io5";
+import { TokenResponse, useGoogleLogin } from "@react-oauth/google";
+
+import * as interfaces from "@/interfaces/index";
 
 export default function GoogleButtonComponent() {
   const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
   const [errorOnRequest, setErrorOnRequest] = useState<boolean>(false);
-  const params = useSearchParams();
   const router = useRouter();
 
   const login = useGoogleLogin({
-    onSuccess: (tokenResponse) => console.log(tokenResponse),
+    onSuccess: (
+      tokenResponse:
+        | interfaces.GoogleAuthProps
+        | Omit<TokenResponse, "error" | "error_description" | "error_uri">
+    ) => {
+      const { access_token, expires_in } = tokenResponse;
+
+      if (access_token) {
+        localStorage.setItem(
+          "google-token",
+          JSON.stringify({
+            token: access_token,
+            expiration: expires_in,
+          })
+        );
+        router.push("/location");
+      }
+    },
   });
 
   return (
     <>
       <button
-        className="rounded-xl gap-2 bg-orange flex items-center justify-center p-4 w-64 mt-2 bg-opacity-65 cursor-not-allowed"
+        className="rounded-xl gap-2 bg-orange flex items-center justify-center p-4 w-64 mt-2"
         type="button"
         onClick={() => login()}
       >
@@ -42,9 +60,7 @@ export default function GoogleButtonComponent() {
           </>
         ) : (
           <>
-            <p className="font-semibold text-white">
-              Google
-            </p>
+            <p className="font-semibold text-white">Google</p>
             <IoLogoGoogle size={20} fill="white" />
           </>
         )}
