@@ -6,7 +6,7 @@ import { IoIosSend } from "react-icons/io";
 import { useForm, SubmitHandler } from "react-hook-form";
 import * as interfaces from "@/interfaces/index";
 import { useEffect, useState, useRef } from "react";
-import ProfileBoxContainer from "@/components/ProfileBoxContainer.tsx/ProfileBoxContainer";
+import ProfileBoxContainer from "@/components/ProfileBoxContainer/ProfileBoxContainer";
 
 export default function Location() {
   const imageRef = useRef<HTMLImageElement>(null);
@@ -28,7 +28,7 @@ export default function Location() {
 
       if (token) {
         await axios.post(
-          "https://community-cares-server.onrender.com/location",
+          "https://community-cares-server.onrender.com/pending-location",
           {
             name: data.name,
             type: data.type,
