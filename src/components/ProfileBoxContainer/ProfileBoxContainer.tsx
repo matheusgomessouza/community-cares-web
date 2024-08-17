@@ -48,6 +48,7 @@ export default function ProfileBoxContainer({
           className="text-orange font-medium cursor-pointer text-sm"
           onClick={() => {
             localStorage.removeItem("github-token");
+            localStorage.removeItem("google-token");
             router.push("/");
           }}
         >

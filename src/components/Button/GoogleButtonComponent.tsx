@@ -1,62 +1,51 @@
 "use client";
 
-import axios from "axios";
-import { useEffect, useCallback, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { IoLogoGoogle } from "react-icons/io5";
+import { TokenResponse, useGoogleLogin } from "@react-oauth/google";
+
+import * as interfaces from "@/interfaces/index";
 
 export default function GoogleButtonComponent() {
   const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
   const [errorOnRequest, setErrorOnRequest] = useState<boolean>(false);
-  const params = useSearchParams();
   const router = useRouter();
 
-  /*
-   * Create form to request access token from Google's OAuth 2.0 server.
-   */
-  function oauthSignIn() {
-    // Google's OAuth 2.0 endpoint for requesting an access token
-    var oauth2Endpoint = "https://accounts.google.com/o/oauth2/v2/auth";
+  const login = useGoogleLogin({
+    onSuccess: (
+      tokenResponse:
+        | interfaces.GoogleAuthProps
+        | Omit<TokenResponse, "error" | "error_description" | "error_uri">
+    ) => {
+      const { access_token, expires_in } = tokenResponse;
 
-    // Create <form> element to submit parameters to OAuth 2.0 endpoint.
-    var form = document.createElement("form");
-    form.setAttribute("method", "GET"); // Send as a GET request.
-    form.setAttribute("action", oauth2Endpoint);
-
-    // Parameters to pass to OAuth 2.0 endpoint.
-    var params = {
-      client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-      redirect_uri: process.env.NEXT_PUBLIC_REDIRECT_URI,
-      response_type: "token",
-      scope: "https://www.googleapis.com/auth/drive.metadata.readonly",
-      include_granted_scopes: "true",
-      state: "pass-through value",
-    };
-
-    // Add form parameters as hidden input values.
-    for (var p in params) {
-      var input = document.createElement("input");
-      input.setAttribute("type", "hidden");
-      input.setAttribute("name", p);
-      input.setAttribute("value", p);
-      form.appendChild(input);
-    }
-
-    // Add form to page and submit it to open the OAuth 2.0 endpoint.
-    document.body.appendChild(form);
-    form.submit();
-  }
+      if (access_token) {
+        localStorage.setItem(
+          "google-token",
+          JSON.stringify({
+            token: access_token,
+            expiration: expires_in,
+          })
+        );
+        router.push("/location");
+      } else {
+        setIsAuthenticating(false);
+        setErrorOnRequest(true);
+      }
+    },
+  });
 
   return (
     <>
       <button
-        disabled
-        className="rounded-xl gap-2 bg-orange flex items-center justify-center p-4 w-64 mt-2 cursor-not-allowed bg-opacity-65"
+        className="rounded-xl gap-2 bg-orange flex items-center justify-center p-4 w-64 mt-2"
         type="button"
-        onClick={() => oauthSignIn()}
+        onClick={() => login()}
       >
         {isAuthenticating ? (
           <>
+            <p className="font-semibold text-white">Authenticating</p>
             <svg
               width="100"
               height="100"
@@ -71,7 +60,6 @@ export default function GoogleButtonComponent() {
                 fill="yellow"
               />
             </svg>
-            <p className="font-semibold text-white">Authenticating</p>
           </>
         ) : (
           <>

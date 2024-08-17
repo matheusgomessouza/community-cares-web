@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Montserrat, Shrikhand } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
 import "./globals.css";
 
 const montserrat = Montserrat({
@@ -26,6 +29,8 @@ export default function RootLayout({
     <html lang="en" className="bg-white">
       <body className={`${montserrat.variable} ${shrikhand.variable}`}>
         {children}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

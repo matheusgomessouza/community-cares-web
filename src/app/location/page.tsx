@@ -6,11 +6,11 @@ import { IoIosSend } from "react-icons/io";
 import { useForm, SubmitHandler } from "react-hook-form";
 import * as interfaces from "@/interfaces/index";
 import { useEffect, useState, useRef } from "react";
-import ProfileBoxContainer from "@/components/ProfileBoxContainer.tsx/ProfileBoxContainer";
+import ProfileBoxContainer from "@/components/ProfileBoxContainer/ProfileBoxContainer";
 
 export default function Location() {
   const imageRef = useRef<HTMLImageElement>(null);
-  const [githubUserData, setGithubUserData] = useState<{
+  const [userData, setUserData] = useState<{
     name: string;
     avatar_url: string;
   }>({
@@ -28,7 +28,7 @@ export default function Location() {
 
       if (token) {
         await axios.post(
-          "https://community-cares-server.onrender.com/location",
+          "https://community-cares-server.onrender.com/pending-location",
           {
             name: data.name,
             type: data.type,
@@ -50,16 +50,32 @@ export default function Location() {
 
   async function getUserData() {
     try {
-      const token = localStorage.getItem("github-token");
+      const githubToken = localStorage.getItem("github-token");
+      const googleToken = localStorage.getItem("google-token");
+      const parsedGoogleInfo = googleToken && JSON.parse(googleToken);
 
-      if (token) {
+      if (githubToken) {
         const { data } = await axios.get("https://api.github.com/user", {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${githubToken}`,
           },
         });
 
         return data;
+      } else {
+        const { data } = await axios.get<interfaces.GooglePeopleAPIProps>(
+          "https://people.googleapis.com/v1/people/me?personFields=names,photos",
+          {
+            headers: {
+              Authorization: `Bearer ${parsedGoogleInfo.token}`,
+            },
+          }
+        );
+
+        return {
+          name: data.names[0].displayName,
+          avatar_url: data.photos[0].url,
+        };
       }
     } catch (error) {
       console.error("Unable to retrieve user data [getUserData]", error);
@@ -69,7 +85,7 @@ export default function Location() {
   useEffect(() => {
     getUserData().then((res) => {
       if (res) {
-        setGithubUserData({
+        setUserData({
           name: res.name,
           avatar_url: res.avatar_url,
         });
@@ -101,8 +117,8 @@ export default function Location() {
 
         <div className="relative flex flex-col items-end">
           <Image
-            src={githubUserData ? githubUserData.avatar_url : ""}
-            alt={githubUserData.name}
+            src={userData ? userData.avatar_url : ""}
+            alt={userData.name}
             className="bg-orange rounded-full cursor-pointer"
             width={64}
             height={64}
@@ -127,7 +143,7 @@ export default function Location() {
           required
           {...register("name")}
           placeholder="Establishment name"
-          className="outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
+          className="text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
         />
 
         <label
@@ -168,7 +184,7 @@ export default function Location() {
           required
           {...register("address")}
           placeholder="Establishment address"
-          className="outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
+          className="text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
         />
 
         <label
@@ -182,7 +198,7 @@ export default function Location() {
           required
           {...register("telephone")}
           placeholder="Establishment telephone"
-          className="outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
+          className="text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
         />
 
         <label className="text-orange font-bold mb-2">Coordinates</label>
@@ -191,14 +207,14 @@ export default function Location() {
           required
           {...register("coords.latitude")}
           placeholder="Latitude"
-          className="outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-5"
+          className="text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-5"
         />
         <input
           type="text"
           required
           {...register("coords.longitude")}
           placeholder="Longitude"
-          className="outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
+          className="text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
         />
         <button
           type="submit"
