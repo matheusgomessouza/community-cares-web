@@ -17,3 +17,37 @@ export interface GoogleAuthProps {
   authuser: string;
   prompt: string;
 }
+
+export interface GooglePeopleAPIProps {
+  resourceName: string;
+  etag: string;
+  names: [
+    {
+      metadata: {
+        primary: boolean;
+        source: {
+          type: string;
+          id: string;
+        };
+        sourcePrimary: boolean;
+      };
+      displayName: string;
+      familyName: string;
+      givenName: string;
+      displayNameLastFirst: string;
+      unstructuredName: string;
+    }
+  ];
+  photos: [
+    {
+      metadata: {
+        primary: boolean;
+        source: {
+          type: string;
+          id: string;
+        };
+      };
+      url: string;
+    }
+  ];
+}

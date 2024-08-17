@@ -29,6 +29,9 @@ export default function GoogleButtonComponent() {
           })
         );
         router.push("/location");
+      } else {
+        setIsAuthenticating(false);
+        setErrorOnRequest(true);
       }
     },
   });
