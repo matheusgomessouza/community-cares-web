@@ -3,9 +3,12 @@
 import axios from "axios";
 import Image from "next/image";
 import { IoIosSend } from "react-icons/io";
-import { useForm, SubmitHandler } from "react-hook-form";
-import * as interfaces from "@/interfaces/index";
 import { useEffect, useState, useRef } from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+import * as interfaces from "@/interfaces/index";
 import ProfileBoxContainer from "@/components/ProfileBoxContainer/ProfileBoxContainer";
 
 export default function Location() {
@@ -21,13 +24,15 @@ export default function Location() {
   const { handleSubmit, register } = useForm<interfaces.LocationInputProps>();
   const onSubmit: SubmitHandler<interfaces.LocationInputProps> = (data) =>
     postLocation(data);
+  const [isLoading, setIsLoading] = useState(false);
 
   async function postLocation(data: interfaces.LocationInputProps) {
     try {
+      setIsLoading(true);
       const token = localStorage.getItem("github-token");
 
       if (token) {
-        await axios.post(
+        const response = await axios.post(
           "https://community-cares-server.onrender.com/pending-location",
           {
             name: data.name,
@@ -42,9 +47,16 @@ export default function Location() {
             },
           }
         );
+        if (response.status === 200) toast.success("Location successfully shared! Thank you for helping 🤗");
       }
+
+
     } catch (error) {
+      setIsLoading(false);
+      toast.error("Unable to share location, please try again. 😓")
       console.error("Unable to post new location /postLocation");
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -223,6 +235,7 @@ export default function Location() {
           <p className="font-bold text-white">Send</p>
           <IoIosSend fill="white" />
         </button>
+        <ToastContainer />
       </form>
     </main>
   );
