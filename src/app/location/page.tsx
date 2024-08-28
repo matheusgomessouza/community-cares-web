@@ -29,7 +29,11 @@ export default function Location() {
   async function postLocation(data: interfaces.LocationInputProps) {
     try {
       setIsLoading(true);
-      const token = localStorage.getItem("github-token");
+      const githubToken = localStorage.getItem("github-token");
+      const googleToken = localStorage.getItem("google-token");
+      const parsedGoogleInfo = googleToken && JSON.parse(googleToken);
+
+      const token = githubToken ? githubToken : String(parsedGoogleInfo.token);
 
       if (token) {
         const response = await axios.post(
@@ -40,6 +44,7 @@ export default function Location() {
             address: data.address,
             contact: data.telephone,
             coords: data.coords,
+            provider: githubToken ? "github" : "google",
           },
           {
             headers: {
@@ -47,13 +52,14 @@ export default function Location() {
             },
           }
         );
-        if (response.status === 200) toast.success("Location successfully shared! Thank you for helping 🤗");
+        if (response.status === 200)
+          toast.success(
+            "Location successfully shared! Thank you for helping 🤗"
+          );
       }
-
-
     } catch (error) {
       setIsLoading(false);
-      toast.error("Unable to share location, please try again. 😓")
+      toast.error("Unable to share location, please try again. 😓");
       console.error("Unable to post new location /postLocation");
     } finally {
       setIsLoading(false);
@@ -230,10 +236,32 @@ export default function Location() {
         />
         <button
           type="submit"
-          className="bg-orange rounded-lg h-10 flex items-center justify-center gap-2 w-24 ml-auto"
+          className="bg-orange rounded-lg px-4 h-10 flex items-center justify-center gap-2 ml-auto"
         >
-          <p className="font-bold text-white">Send</p>
-          <IoIosSend fill="white" />
+          {isLoading ? (
+            <section className="flex gap-2 items-center justify-center">
+              <p className="font-semibold text-white">Sharing</p>
+              <svg
+                width="100"
+                height="100"
+                className="animate-spin h-5 w-5 mr-3 border-white rounded-full border-4 border-dotted"
+              >
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="40"
+                  stroke="green"
+                  strokeWidth="4"
+                  fill="yellow"
+                />
+              </svg>
+            </section>
+          ) : (
+            <>
+              <p className="font-bold text-white">Share</p>
+              <IoIosSend fill="white" />
+            </>
+          )}
         </button>
         <ToastContainer />
       </form>
