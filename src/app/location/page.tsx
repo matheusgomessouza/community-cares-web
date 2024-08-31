@@ -3,9 +3,12 @@
 import axios from "axios";
 import Image from "next/image";
 import { IoIosSend } from "react-icons/io";
-import { useForm, SubmitHandler } from "react-hook-form";
-import * as interfaces from "@/interfaces/index";
 import { useEffect, useState, useRef } from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+import * as interfaces from "@/interfaces/index";
 import ProfileBoxContainer from "@/components/ProfileBoxContainer/ProfileBoxContainer";
 
 export default function Location() {
@@ -21,13 +24,21 @@ export default function Location() {
   const { handleSubmit, register } = useForm<interfaces.LocationInputProps>();
   const onSubmit: SubmitHandler<interfaces.LocationInputProps> = (data) =>
     postLocation(data);
+  const [isLoading, setIsLoading] = useState(false);
 
   async function postLocation(data: interfaces.LocationInputProps) {
     try {
-      const token = localStorage.getItem("github-token");
+      setIsLoading(true);
+      const githubToken = localStorage.getItem("github-token");
+      const googleToken = localStorage.getItem("google-token");
+      const parsedGoogleInfo = googleToken && JSON.parse(googleToken);
+
+      const token = githubToken
+        ? githubToken
+        : String(parsedGoogleInfo.access_token);
 
       if (token) {
-        await axios.post(
+        const response = await axios.post(
           "https://community-cares-server.onrender.com/pending-location",
           {
             name: data.name,
@@ -35,6 +46,7 @@ export default function Location() {
             address: data.address,
             contact: data.telephone,
             coords: data.coords,
+            provider: githubToken ? "github" : "google",
           },
           {
             headers: {
@@ -42,9 +54,17 @@ export default function Location() {
             },
           }
         );
+        if (response.status === 200)
+          toast.success(
+            "Location successfully shared! Thank you for helping 🤗"
+          );
       }
     } catch (error) {
+      setIsLoading(false);
+      toast.error("Unable to share location, please try again. 😓");
       console.error("Unable to post new location /postLocation");
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -67,7 +87,7 @@ export default function Location() {
           "https://people.googleapis.com/v1/people/me?personFields=names,photos",
           {
             headers: {
-              Authorization: `Bearer ${parsedGoogleInfo.token}`,
+              Authorization: `Bearer ${parsedGoogleInfo.access_token}`,
             },
           }
         );
@@ -218,11 +238,34 @@ export default function Location() {
         />
         <button
           type="submit"
-          className="bg-orange rounded-lg h-10 flex items-center justify-center gap-2 w-24 ml-auto"
+          className="bg-orange rounded-lg px-4 h-10 flex items-center justify-center gap-2 ml-auto"
         >
-          <p className="font-bold text-white">Send</p>
-          <IoIosSend fill="white" />
+          {isLoading ? (
+            <section className="flex gap-2 items-center justify-center">
+              <p className="font-semibold text-white">Sharing</p>
+              <svg
+                width="100"
+                height="100"
+                className="animate-spin h-5 w-5 mr-3 border-white rounded-full border-4 border-dotted"
+              >
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="40"
+                  stroke="green"
+                  strokeWidth="4"
+                  fill="yellow"
+                />
+              </svg>
+            </section>
+          ) : (
+            <>
+              <p className="font-bold text-white">Share</p>
+              <IoIosSend fill="white" />
+            </>
+          )}
         </button>
+        <ToastContainer />
       </form>
     </main>
   );
