@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { IoLogoGoogle } from "react-icons/io5";
-import { TokenResponse, useGoogleLogin } from "@react-oauth/google";
+import {
+  CodeResponse,
+  TokenResponse,
+  useGoogleLogin,
+} from "@react-oauth/google";
+import axios from "axios";
 
 import * as interfaces from "@/interfaces/index";
 
@@ -12,28 +17,46 @@ export default function GoogleButtonComponent() {
   const [errorOnRequest, setErrorOnRequest] = useState<boolean>(false);
   const router = useRouter();
 
-  const login = useGoogleLogin({
-    onSuccess: (
-      tokenResponse:
-        | interfaces.GoogleAuthProps
-        | Omit<TokenResponse, "error" | "error_description" | "error_uri">
+  const handleLogin = useGoogleLogin({
+    onSuccess: async (
+      codeResponse:
+        | interfaces.GoogleCodeAuthProps
+        | Omit<CodeResponse, "error" | "error_description" | "error_uri">
     ) => {
-      const { access_token, expires_in } = tokenResponse;
+      const { code } = codeResponse;
 
-      if (access_token) {
-        localStorage.setItem(
-          "google-token",
-          JSON.stringify({
-            token: access_token,
-            expiration: expires_in,
-          })
-        );
-        router.push("/location");
+      if (code) {
+        try {
+          const response = await axios.post<interfaces.GoogleAccessTokenProps>(
+            "https://community-cares-server.onrender.com/authenticate-google",
+            {
+              code: code,
+            }
+          );
+
+          localStorage.setItem(
+            "google-token",
+            JSON.stringify({
+              access_token: response.data.access_token,
+              refresh_token: response.data.refresh_token,
+              scope: response.data.scope,
+              token_type: response.data.token_type,
+              id_token: response.data.id_token,
+              expiry_date: response.data.expiry_date,
+            })
+          );
+          router.push("/location");
+        } catch (error) {
+          setIsAuthenticating(false);
+          setErrorOnRequest(true);
+          console.error("Unable to perform code exchage with server:", error);
+        }
       } else {
         setIsAuthenticating(false);
         setErrorOnRequest(true);
       }
     },
+    flow: "auth-code",
   });
 
   return (
@@ -41,7 +64,7 @@ export default function GoogleButtonComponent() {
       <button
         className="rounded-xl gap-2 bg-orange flex items-center justify-center p-4 w-64 mt-2"
         type="button"
-        onClick={() => login()}
+        onClick={() => handleLogin()}
       >
         {isAuthenticating ? (
           <>
@@ -70,7 +93,7 @@ export default function GoogleButtonComponent() {
       </button>
       {errorOnRequest && (
         <p className="text-red-600 font-bold mt-4">
-          Error on the authentication request
+          Error on the authentication request, please try again.
         </p>
       )}
     </>

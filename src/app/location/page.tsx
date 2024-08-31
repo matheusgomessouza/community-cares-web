@@ -33,7 +33,9 @@ export default function Location() {
       const googleToken = localStorage.getItem("google-token");
       const parsedGoogleInfo = googleToken && JSON.parse(googleToken);
 
-      const token = githubToken ? githubToken : String(parsedGoogleInfo.token);
+      const token = githubToken
+        ? githubToken
+        : String(parsedGoogleInfo.access_token);
 
       if (token) {
         const response = await axios.post(
@@ -85,7 +87,7 @@ export default function Location() {
           "https://people.googleapis.com/v1/people/me?personFields=names,photos",
           {
             headers: {
-              Authorization: `Bearer ${parsedGoogleInfo.token}`,
+              Authorization: `Bearer ${parsedGoogleInfo.access_token}`,
             },
           }
         );
