@@ -4,12 +4,13 @@ import axios from "axios";
 import Image from "next/image";
 import { IoIosSend } from "react-icons/io";
 import { useEffect, useState, useRef } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import * as interfaces from "@/interfaces/index";
 import ProfileBoxContainer from "@/components/ProfileBoxContainer/ProfileBoxContainer";
+import InputMask from "react-input-mask";
 
 export default function Location() {
   const imageRef = useRef<HTMLImageElement>(null);
@@ -21,7 +22,8 @@ export default function Location() {
     avatar_url: "",
   });
   const [hover, setHover] = useState<boolean>(false);
-  const { handleSubmit, register } = useForm<interfaces.LocationInputProps>();
+  const { handleSubmit, register, control, watch } =
+    useForm<interfaces.LocationInputProps>();
   const onSubmit: SubmitHandler<interfaces.LocationInputProps> = (data) =>
     postLocation(data);
   const [isLoading, setIsLoading] = useState(false);
@@ -128,6 +130,8 @@ export default function Location() {
     };
   }, []);
 
+  console.log(watch());
+
   return (
     <main className="p-10 bg-white">
       <header className="relative w-full flex justify-end items-center">
@@ -213,12 +217,17 @@ export default function Location() {
         >
           Telephone
         </label>
-        <input
-          type="text"
-          required
-          {...register("telephone")}
-          placeholder="Establishment telephone"
-          className="text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
+        <Controller
+          name="telephone"
+          control={control}
+          render={({ field }) => (
+            <InputMask
+              {...field}
+              mask="(99) 9999-9999"
+              alwaysShowMask
+              className="text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
+            />
+          )}
         />
 
         <label className="text-orange font-bold mb-2">Coordinates</label>
