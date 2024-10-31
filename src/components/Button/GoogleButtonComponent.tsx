@@ -28,7 +28,7 @@ export default function GoogleButtonComponent() {
       if (code) {
         try {
           const response = await axios.post<interfaces.GoogleAccessTokenProps>(
-            "https://community-cares-server.onrender.com/authenticate-google",
+            "http://localhost:8080/authenticate-google",
             {
               code: code,
             }

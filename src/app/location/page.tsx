@@ -11,6 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 import * as interfaces from "@/interfaces/index";
 import ProfileBoxContainer from "@/components/ProfileBoxContainer/ProfileBoxContainer";
 import InputMask from "react-input-mask";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 export default function Location() {
   const imageRef = useRef<HTMLImageElement>(null);
@@ -22,8 +23,14 @@ export default function Location() {
     avatar_url: "",
   });
   const [hover, setHover] = useState<boolean>(false);
-  const { handleSubmit, register, control, watch } =
-    useForm<interfaces.LocationInputProps>();
+  const {
+    handleSubmit,
+    register,
+    control,
+    formState: { errors },
+  } = useForm<interfaces.LocationInputProps>({
+    resolver: zodResolver(interfaces.LocationInputSchema),
+  });
   const onSubmit: SubmitHandler<interfaces.LocationInputProps> = (data) =>
     postLocation(data);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,7 +48,7 @@ export default function Location() {
 
       if (token) {
         const response = await axios.post(
-          "https://community-cares-server.onrender.com/pending-location",
+          "http://localhost:8080/pending-location",
           {
             name: data.name,
             type: data.type,
@@ -77,30 +84,44 @@ export default function Location() {
       const parsedGoogleInfo = googleToken && JSON.parse(googleToken);
 
       if (githubToken) {
-        const { data } = await axios.get("https://api.github.com/user", {
-          headers: {
-            Authorization: `Bearer ${githubToken}`,
-          },
-        });
-
-        return data;
-      } else {
-        const { data } = await axios.get<interfaces.GooglePeopleAPIProps>(
-          "https://people.googleapis.com/v1/people/me?personFields=names,photos",
-          {
+        try {
+          const { data } = await axios.get("https://api.github.com/user", {
             headers: {
-              Authorization: `Bearer ${parsedGoogleInfo.access_token}`,
+              Authorization: `Bearer ${githubToken}`,
             },
-          }
-        );
+          });
 
-        return {
-          name: data.names[0].displayName,
-          avatar_url: data.photos[0].url,
-        };
+          return data;
+        } catch (error) {
+          console.error(
+            "Unable to retrieve user data from GitHub API [getUserData]",
+            error
+          );
+        }
+      } else {
+        try {
+          const { data } = await axios.get<interfaces.GooglePeopleAPIProps>(
+            "https://people.googleapis.com/v1/people/me?personFields=names,photos",
+            {
+              headers: {
+                Authorization: `Bearer ${parsedGoogleInfo.access_token}`,
+              },
+            }
+          );
+
+          return {
+            name: data.names[0].displayName,
+            avatar_url: data.photos[0].url,
+          };
+        } catch (error) {
+          console.error(
+            "Unable to retrieve user data from Google API [getUserData]",
+            error
+          );
+        }
       }
     } catch (error) {
-      console.error("Unable to retrieve user data [getUserData]", error);
+      console.error("Unable to retrieve user user token [getUserData]", error);
     }
   }
 
@@ -129,8 +150,6 @@ export default function Location() {
       document.removeEventListener("click", handleClickOutside);
     };
   }, []);
-
-  console.log(watch());
 
   return (
     <main className="p-10 bg-white">
@@ -164,11 +183,19 @@ export default function Location() {
         </label>
         <input
           type="text"
-          required
           {...register("name")}
           placeholder="Establishment name"
-          className="text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
+          className={
+            errors.name
+              ? "text-gray outline-red-500 border-red-500 border-solid border-2 rounded-lg px-2 h-10 mb-2"
+              : "text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
+          }
         />
+        {errors.name && (
+          <span className="font-sans font-bold text-red-500 mb-4">
+            {errors.name.message}
+          </span>
+        )}
 
         <label
           htmlFor="establishment-type"
@@ -178,7 +205,11 @@ export default function Location() {
         </label>
         <select
           {...register("type")}
-          className="outline-orange text-gray border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10 relative"
+          className={
+            errors.type
+              ? "text-gray outline-red-500 border-red-500 border-solid border-2 rounded-lg px-2 h-10 mb-2"
+              : "outline-orange text-gray border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10 relative"
+          }
         >
           <option value="" className="text-gray">
             -- Please choose an option --
@@ -196,6 +227,11 @@ export default function Location() {
             Hospital
           </option>
         </select>
+        {errors.type && (
+          <span className="font-sans font-bold text-red-500 mb-4">
+            {errors.type.message}
+          </span>
+        )}
 
         <label
           htmlFor="establishment-address"
@@ -205,11 +241,19 @@ export default function Location() {
         </label>
         <input
           type="text"
-          required
           {...register("address")}
           placeholder="Establishment address"
-          className="text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
+          className={
+            errors.address
+              ? "text-gray outline-red-500 border-red-500 border-solid border-2 rounded-lg px-2 h-10 mb-2"
+              : "text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
+          }
         />
+        {errors.address && (
+          <span className="font-sans font-bold text-red-500 mb-4">
+            {errors.address.message}
+          </span>
+        )}
 
         <label
           htmlFor="establishment-telephone"
@@ -220,31 +264,58 @@ export default function Location() {
         <Controller
           name="telephone"
           control={control}
-          render={({ field }) => (
+          render={({ field, formState }) => (
             <InputMask
               {...field}
               mask="(99) 9999-9999"
               alwaysShowMask
-              className="text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
+              className={
+                errors.telephone || !formState.isDirty
+                  ? "text-gray outline-red-500 border-red-500 border-solid border-2 rounded-lg px-2 h-10 mb-2"
+                  : "text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
+              }
             />
           )}
         />
+        {errors.telephone && (
+          <span className="font-sans font-bold text-red-500 mb-4">
+            {errors.telephone.message}
+          </span>
+        )}
 
         <label className="text-orange font-bold mb-2">Coordinates</label>
         <input
           type="text"
-          required
           {...register("coords.latitude")}
           placeholder="Latitude"
-          className="text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-5"
+          className={
+            errors.coords?.latitude
+              ? "text-gray outline-red-500 border-red-500 border-solid border-2 rounded-lg px-2 h-10 mb-2"
+              : "text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-5"
+          }
         />
+        {errors.coords?.latitude && (
+          <span className="font-sans font-bold text-red-500 mb-4">
+            {errors.coords.latitude?.message}
+          </span>
+        )}
+
         <input
           type="text"
-          required
           {...register("coords.longitude")}
           placeholder="Longitude"
-          className="text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
+          className={
+            errors.coords?.longitude
+              ? "text-gray outline-red-500 border-red-500 border-solid border-2 rounded-lg px-2 h-10 mb-2"
+              : "text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-5"
+          }
         />
+        {errors.coords?.longitude && (
+          <span className="font-sans font-bold text-red-500 mb-4">
+            {errors.coords.longitude?.message}
+          </span>
+        )}
+
         <button
           type="submit"
           className="bg-orange rounded-lg px-4 h-10 flex items-center justify-center gap-2 ml-auto"

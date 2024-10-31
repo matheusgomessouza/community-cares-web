@@ -18,7 +18,7 @@ export default function GitHubButtonComponent() {
 
       if (code) {
         const response = await axios.post(
-          "https://community-cares-server.onrender.com/authenticate",
+          "http://localhost:8080/authenticate",
           {
             code: code,
             env: "web",

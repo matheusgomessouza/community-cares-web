@@ -1,11 +1,12 @@
+import { z, ZodType } from "zod";
 export interface LocationInputProps {
   name: string;
   type: string;
   address: string;
   telephone: string;
   coords: {
-    latitude: number;
-    longitude: number;
+    latitude: number | string;
+    longitude: number | string;
   };
 }
 
@@ -67,3 +68,22 @@ export interface GoogleAccessTokenProps {
   id_token: string;
   expiry_date: number;
 }
+
+export const LocationInputSchema: ZodType<LocationInputProps> = z
+  .object({
+    name: z.string().min(1, { message: "Required field" }),
+    type: z
+      .string()
+      .refine((value) => value === "-- Please choose an option --", {
+        message: "Please select a establishment type",
+      }),
+    address: z.string().min(1, { message: "Required field" }),
+    telephone: z
+      .string({ message: "Required field" })
+      .min(13, { message: "Invalid telephone number format" }),
+    coords: z.object({
+      latitude: z.string().min(9, { message: "Invalid latitude" }),
+      longitude: z.string().min(9, { message: "Invalid longitude" }),
+    }),
+  })
+  .required();
