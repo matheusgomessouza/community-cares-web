@@ -72,11 +72,9 @@ export interface GoogleAccessTokenProps {
 export const LocationInputSchema: ZodType<LocationInputProps> = z
   .object({
     name: z.string().min(1, { message: "Required field" }),
-    type: z
-      .string()
-      .refine((value) => value === "-- Please choose an option --", {
-        message: "Please select a establishment type",
-      }),
+    type: z.string().min(6, {
+      message: "Please select a establishment type",
+    }),
     address: z.string().min(1, { message: "Required field" }),
     telephone: z
       .string({ message: "Required field" })

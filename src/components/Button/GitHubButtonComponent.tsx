@@ -18,7 +18,7 @@ export default function GitHubButtonComponent() {
 
       if (code) {
         const response = await axios.post(
-          "http://localhost:8080/authenticate",
+          `${process.env.NEXT_PUBLIC_API}/authenticate`,
           {
             code: code,
             env: "web",

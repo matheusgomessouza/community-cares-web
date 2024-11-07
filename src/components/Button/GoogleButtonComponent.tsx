@@ -28,7 +28,7 @@ export default function GoogleButtonComponent() {
       if (code) {
         try {
           const response = await axios.post<interfaces.GoogleAccessTokenProps>(
-            "http://localhost:8080/authenticate-google",
+            `${process.env.NEXT_PUBLIC_API}/authenticate-google`,
             {
               code: code,
             }

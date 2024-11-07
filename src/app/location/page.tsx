@@ -9,7 +9,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import * as interfaces from "@/interfaces/index";
-import ProfileBoxContainer from "@/components/ProfileBoxContainer/ProfileBoxContainer";
+import ProfileBoxContainerComponent from "@/components/ProfileBoxContainer/ProfileBoxContainerComponent";
 import InputMask from "react-input-mask";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -48,7 +48,7 @@ export default function Location() {
 
       if (token) {
         const response = await axios.post(
-          "http://localhost:8080/pending-location",
+          `${process.env.NEXT_PUBLIC_API}/pending-location`,
           {
             name: data.name,
             type: data.type,
@@ -168,7 +168,7 @@ export default function Location() {
             onMouseOver={() => setHover(true)}
             ref={imageRef}
           />
-          <ProfileBoxContainer isHovered={hover} />
+          <ProfileBoxContainerComponent isHovered={hover} />
         </div>
       </header>
       <form
