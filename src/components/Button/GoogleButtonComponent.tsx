@@ -12,7 +12,7 @@ import axios from "axios";
 
 import * as interfaces from "@/interfaces/index";
 
-export default function GoogleButtonComponent() {
+export function GoogleButtonComponent() {
   const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
   const [errorOnRequest, setErrorOnRequest] = useState<boolean>(false);
   const router = useRouter();

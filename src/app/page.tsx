@@ -1,5 +1,5 @@
-import GitHubButtonComponent from "@/components/Button/GitHubButtonComponent";
-import GoogleButtonComponent from "@/components/Button/GoogleButtonComponent";
+import { GitHubButtonComponent } from "@/components/Button/GitHubButtonComponent";
+import { GoogleButtonComponent } from "@/components/Button/GoogleButtonComponent";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { Suspense } from "react";
 
