@@ -5,7 +5,7 @@ import { useEffect, useCallback, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { IoLogoGithub } from "react-icons/io";
 
-export default function GitHubButtonComponent() {
+export function GitHubButtonComponent() {
   const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
   const [errorOnRequest, setErrorOnRequest] = useState<boolean>(false);
   const params = useSearchParams();
@@ -18,7 +18,7 @@ export default function GitHubButtonComponent() {
 
       if (code) {
         const response = await axios.post(
-          "https://community-cares-server.onrender.com/authenticate",
+          `${process.env.NEXT_PUBLIC_API}/authenticate`,
           {
             code: code,
             env: "web",

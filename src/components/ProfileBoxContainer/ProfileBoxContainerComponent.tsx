@@ -1,12 +1,11 @@
 import { FaPowerOff } from "react-icons/fa6";
 import { useRouter } from "next/navigation";
 
-
 interface ProfileBoxContainerProps {
   isHovered: boolean;
 }
 
-export default function ProfileBoxContainer({
+export default function ProfileBoxContainerComponent({
   isHovered,
 }: ProfileBoxContainerProps) {
   const router = useRouter();
