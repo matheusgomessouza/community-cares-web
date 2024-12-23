@@ -270,7 +270,7 @@ export default function Location() {
               mask="(99) 9999-9999"
               alwaysShowMask
               className={
-                errors.telephone || !formState.isDirty
+                errors.telephone && !formState.isDirty
                   ? "text-gray outline-red-500 border-red-500 border-solid border-2 rounded-lg px-2 h-10 mb-2"
                   : "text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
               }
