@@ -12,7 +12,7 @@ import axios from "axios";
 
 import * as interfaces from "@/interfaces/index";
 
-export default function GoogleButtonComponent() {
+export function GoogleButtonComponent() {
   const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
   const [errorOnRequest, setErrorOnRequest] = useState<boolean>(false);
   const router = useRouter();
@@ -27,8 +27,10 @@ export default function GoogleButtonComponent() {
 
       if (code) {
         try {
+          setIsAuthenticating(true);
+          
           const response = await axios.post<interfaces.GoogleAccessTokenProps>(
-            "https://community-cares-server.onrender.com/authenticate-google",
+            `${process.env.NEXT_PUBLIC_API}/authenticate-google`,
             {
               code: code,
             }
