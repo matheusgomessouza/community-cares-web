@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import axios from "axios";
 import { useEffect, useCallback, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -51,6 +52,7 @@ export function GitHubButtonComponent() {
       <button
         className="rounded-xl gap-2 bg-darkOrange flex items-center justify-center p-4 w-64"
         type="button"
+        disabled={isAuthenticating}
         onClick={async () => {
           router.push(
             `https://github.com/login/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_CLIENT_ID}`
