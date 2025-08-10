@@ -15,10 +15,12 @@ const config: Config = {
       },
       colors: {
         orange: "#EB841A",
+        darkOrange: "#EE6A08",
         gray: "#B3B3B3",
       },
     },
   },
   plugins: [],
 };
+
 export default config;

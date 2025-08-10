@@ -64,7 +64,7 @@ export function GoogleButtonComponent() {
   return (
     <>
       <button
-        className="rounded-xl gap-2 bg-orange flex items-center justify-center p-4 w-64 mt-2"
+        className="rounded-xl gap-2 bg-darkOrange flex items-center justify-center p-4 w-64"
         type="button"
         onClick={() => handleLogin()}
       >

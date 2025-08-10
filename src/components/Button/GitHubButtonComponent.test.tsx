@@ -7,6 +7,5 @@ describe("Authorization component", () => {
   test("if the component render as expected", () => {
     render(<GitHubButtonComponent />);
   });
- screen.debug()
   expect(screen.getByRole("button")).toHaveTextContent("Github");
 });
