@@ -4,14 +4,15 @@ import axios from "axios";
 import Image from "next/image";
 import { IoIosSend } from "react-icons/io";
 import { useEffect, useState, useRef } from "react";
-import { useForm, SubmitHandler, Controller } from "react-hook-form";
-import { ToastContainer, toast } from "react-toastify";
+import { zodResolver } from "@hookform/resolvers/zod";
 import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer, toast } from "react-toastify";
+import { useForm, SubmitHandler, Controller } from "react-hook-form";
+import { formatPhoneNumber } from "react-phone-number-input";
 
 import * as interfaces from "@/interfaces/index";
 import ProfileBoxContainerComponent from "@/components/ProfileBoxContainer/ProfileBoxContainerComponent";
-import InputMask from "react-input-mask";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { InputTelephoneIntlComponent } from "@/components/InputTelephoneIntl/InputTelephoneIntlComponent";
 
 export default function Location() {
   const imageRef = useRef<HTMLImageElement>(null);
@@ -32,7 +33,7 @@ export default function Location() {
     resolver: zodResolver(interfaces.LocationInputSchema),
   });
   const onSubmit: SubmitHandler<interfaces.LocationInputProps> = (data) =>
-    postLocation(data);
+   postLocation(data);
   const [isLoading, setIsLoading] = useState(false);
 
   async function postLocation(data: interfaces.LocationInputProps) {
@@ -53,7 +54,7 @@ export default function Location() {
             name: data.name,
             type: data.type,
             address: data.address,
-            contact: data.telephone,
+            contact: data.telephone ? formatPhoneNumber(data.telephone) : data.telephone,
             coords: data.coords,
             provider: githubToken ? "github" : "google",
           },
@@ -183,6 +184,7 @@ export default function Location() {
         </label>
         <input
           type="text"
+          autoComplete="on"
           {...register("name")}
           placeholder="Establishment name"
           className={
@@ -241,12 +243,13 @@ export default function Location() {
         </label>
         <input
           type="text"
+          autoComplete="on"
           {...register("address")}
           placeholder="Establishment address"
           className={
             errors.address
               ? "text-gray outline-red-500 border-red-500 border-solid border-2 rounded-lg px-2 h-10 mb-2"
-              : "text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
+              : "text-gray C border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
           }
         />
         {errors.address && (
@@ -264,18 +267,7 @@ export default function Location() {
         <Controller
           name="telephone"
           control={control}
-          render={({ field, formState }) => (
-            <InputMask
-              {...field}
-              mask="(99) 9999-9999"
-              alwaysShowMask
-              className={
-                errors.telephone && !formState.isDirty
-                  ? "text-gray outline-red-500 border-red-500 border-solid border-2 rounded-lg px-2 h-10 mb-2"
-                  : "text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
-              }
-            />
-          )}
+          render={({ field }) => <InputTelephoneIntlComponent {...field} />}
         />
         {errors.telephone && (
           <span className="font-sans font-bold text-red-500 mb-4">
@@ -286,6 +278,7 @@ export default function Location() {
         <label className="text-orange font-bold mb-2">Coordinates</label>
         <input
           type="text"
+          autoComplete="on"
           {...register("coords.latitude")}
           placeholder="Latitude"
           className={
@@ -302,6 +295,7 @@ export default function Location() {
 
         <input
           type="text"
+          autoComplete="on"
           {...register("coords.longitude")}
           placeholder="Longitude"
           className={
