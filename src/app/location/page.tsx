@@ -249,7 +249,7 @@ export default function Location() {
           className={
             errors.address
               ? "text-gray outline-red-500 border-red-500 border-solid border-2 rounded-lg px-2 h-10 mb-2"
-              : "text-gray C border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
+              : "text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-10"
           }
         />
         {errors.address && (
