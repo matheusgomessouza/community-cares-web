@@ -53,7 +53,7 @@ describe("Authorization component", () => {
 
     await userEvent.click(button);
     expect(pushMock).toHaveBeenCalledWith(
-      `https://github.com/login/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_CLIENT_ID}`
+      `https://github.com/login/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_CLIENT_ID_DEV}`
     );
   });
   
