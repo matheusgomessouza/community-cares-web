@@ -30,7 +30,7 @@ export function GoogleButtonComponent() {
           setIsAuthenticating(true);
           
           const response = await axios.post<interfaces.GoogleAccessTokenProps>(
-            `${process.env.NEXT_PUBLIC_API}/authenticate-google`,
+            `${process.env.NEXT_PUBLIC_API}/users/authenticate/google`,
             {
               code: code,
             }
