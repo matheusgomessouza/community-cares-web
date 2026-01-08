@@ -55,7 +55,10 @@ export function GitHubButtonComponent() {
         disabled={isAuthenticating}
         onClick={async () => {
           router.push(
-            `https://github.com/login/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID_DEV}`
+            `https://github.com/login/oauth/authorize?client_id=${
+              process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID ||
+              process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID_DEV
+            }`
           );
         }}
       >
