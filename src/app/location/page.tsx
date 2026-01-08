@@ -49,7 +49,7 @@ export default function Location() {
 
       if (token) {
         const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API}/pending-location`,
+          `${process.env.NEXT_PUBLIC_API}/pending-locations`,
           {
             name: data.name,
             type: data.type,

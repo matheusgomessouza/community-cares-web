@@ -19,7 +19,7 @@ export function GitHubButtonComponent() {
 
       if (code) {
         const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API}/authenticate`,
+          `${process.env.NEXT_PUBLIC_API}/users/authenticate/github`,
           {
             code: code,
             env: "web",
@@ -55,7 +55,10 @@ export function GitHubButtonComponent() {
         disabled={isAuthenticating}
         onClick={async () => {
           router.push(
-            `https://github.com/login/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID}`
+            `https://github.com/login/oauth/authorize?client_id=${
+              process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID ||
+              process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID_DEV
+            }`
           );
         }}
       >
