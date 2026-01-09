@@ -7,7 +7,7 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-darkOrange">
       <section className="text-center flex flex-col items-center bg-white min-w-96 min-h-96 rounded-xl shadow-lg p-8 mt-auto mb-auto drop-shadow-lg/25">
-        <h1 className="font-shrikhand text-4xl mb-2 text-darkOrange">
+        <h1 className="font-heading text-4xl mb-2 text-darkOrange">
           Welcome Back
         </h1>
         <span className="font-paragraph text-base text-gray mb-52">Sign in to your account</span>

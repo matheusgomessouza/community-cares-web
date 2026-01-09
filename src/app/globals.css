@@ -16,26 +16,28 @@
   }
 }
 
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
 }
 
 h1 {
   font-family: var(--font-heading);
 }
 
-p, label {
+p,
+label {
   font-family: var(--font-paragraph);
 }
 
 select::after {
-  content: '\25BC'; /* Unicode arrow-down character */
+  content: "\25BC"; /* Unicode arrow-down character */
   position: absolute;
   top: 50%;
   right: 3px;
