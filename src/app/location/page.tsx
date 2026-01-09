@@ -172,7 +172,7 @@ export default function Location() {
         </svg>
       </div>
       <div className="absolute top-0 right-0 w-[700px] h-[700px] translate-x-1/3 -translate-y-1/3">
-        <svg viewBox="0 0 700 700" className="w-full h-full">
+        <svg viewBox="0 0 700 700" className="w-full h-full" aria-hidden="true">
           <path
             d="M350,50 Q600,150 650,350 T350,650 Q100,550 50,350 T350,50"
             fill="#F39C12"
@@ -181,7 +181,7 @@ export default function Location() {
         </svg>
       </div>
       <div className="absolute bottom-0 left-0 w-[650px] h-[650px] -translate-x-1/3 translate-y-1/3">
-        <svg viewBox="0 0 650 650" className="w-full h-full">
+        <svg viewBox="0 0 650 650" className="w-full h-full" aria-hidden="true">
           <path
             d="M325,50 Q575,125 625,325 T325,625 Q75,550 25,325 T325,50"
             fill="#C0652C"
@@ -190,7 +190,7 @@ export default function Location() {
         </svg>
       </div>
       <div className="absolute bottom-0 right-0 w-[550px] h-[550px] translate-x-1/4 translate-y-1/4">
-        <svg viewBox="0 0 550 550" className="w-full h-full">
+        <svg viewBox="0 0 550 550" className="w-full h-full" aria-hidden="true">
           <path
             d="M275,50 Q475,100 525,275 T275,525 Q75,475 25,275 T275,50"
             fill="#E67E22"
@@ -201,6 +201,7 @@ export default function Location() {
       <svg
         className="absolute top-0 left-0 w-full h-full pointer-events-none"
         viewBox="0 0 1440 900"
+        aria-hidden="true"
       >
         <path
           d="M -100,200 Q 100,150 200,250"
