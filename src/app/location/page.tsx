@@ -163,7 +163,7 @@ export default function Location() {
       }}
     >
       <div className="absolute top-0 left-0 w-[600px] h-[600px] -translate-x-1/3 -translate-y-1/3">
-        <svg viewBox="0 0 600 600" className="w-full h-full">
+        <svg viewBox="0 0 600 600" className="w-full h-full" aria-hidden="true">
           <path
             d="M300,50 Q500,100 550,300 T300,550 Q100,500 50,300 T300,50"
             fill="#D35400"
