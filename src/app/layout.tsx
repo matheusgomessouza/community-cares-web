@@ -27,23 +27,40 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${montserrat.variable} ${shrikhand.variable}`}>
+    <html lang="en" className="h-full">
+      <body className={`${montserrat.variable} ${shrikhand.variable} h-full`}>
         <header className="h-16 w-full bg-white justify-between items-center flex px-32">
           <div className="flex items-center gap-4">
             <MdOutlineHandshake size={40} color="" fill="#EE6A08" />
-            <h1 className="text-2xl font-heading text-darkOrange">Community Cares</h1>
+            <h1 className="text-2xl font-heading text-darkOrange">
+              Community Cares
+            </h1>
           </div>
           <nav>
             <ul className="flex items-center gap-8">
               <li>
-                <a href="#" className="font-paragraph text-darkOrange text-base font-bold">About</a>
+                <a
+                  href="#"
+                  className="font-paragraph text-darkOrange text-base font-bold"
+                >
+                  About
+                </a>
               </li>
               <li>
-                <a href="#" className="font-paragraph text-darkOrange text-base font-bold">How It Works</a>
+                <a
+                  href="#"
+                  className="font-paragraph text-darkOrange text-base font-bold"
+                >
+                  How It Works
+                </a>
               </li>
               <li>
-                <a href="#" className="font-paragraph text-darkOrange text-base font-bold">Testimonials</a>
+                <a
+                  href="#"
+                  className="font-paragraph text-darkOrange text-base font-bold"
+                >
+                  Testimonials
+                </a>
               </li>
             </ul>
           </nav>
