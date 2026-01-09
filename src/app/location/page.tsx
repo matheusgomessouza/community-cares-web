@@ -251,7 +251,7 @@ export default function Location() {
         <div className="relative flex flex-col items-end">
           <Image
             src={
-              userData.avatar_url ?? "../../assets/profile-mockup-image.png"
+              userData.avatar_url ?? "/assets/profile-mockup-image.png"
             }
             alt={userData.name}
             className="bg-orange rounded-full cursor-pointer"
