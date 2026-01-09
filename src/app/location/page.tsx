@@ -248,19 +248,17 @@ export default function Location() {
 
       <header className="relative w-full flex justify-end items-center mb-8 max-w-xl mx-auto">
         <div className="relative flex flex-col items-end">
-          {userData.avatar_url && (
-            <Image
-              src={
-                userData.avatar_url ?? "../../assets/profile-mockup-image.png"
-              }
-              alt={userData.name}
-              className="bg-orange rounded-full cursor-pointer"
-              width={64}
-              height={64}
-              onMouseOver={() => setHover(true)}
-              ref={imageRef}
-            />
-          )}
+          <Image
+            src={
+              userData.avatar_url ?? "../../assets/profile-mockup-image.png"
+            }
+            alt={userData.name}
+            className="bg-orange rounded-full cursor-pointer"
+            width={64}
+            height={64}
+            onMouseOver={() => setHover(true)}
+            ref={imageRef}
+          />
           <ProfileBoxContainerComponent isHovered={hover} />
         </div>
       </header>
