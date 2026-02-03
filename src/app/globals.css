@@ -49,4 +49,32 @@ select::after {
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Screen reader only - hides content visually but keeps it accessible to assistive technologies */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Padrão para hero sticky backgrounds */
+  .sticky-hero-pattern {
+    background-image:
+      radial-gradient(
+        circle at 10% 20%,
+        rgba(255, 255, 255, 0.05) 0%,
+        transparent 20%
+      ),
+      radial-gradient(
+        circle at 90% 80%,
+        rgba(255, 255, 255, 0.05) 0%,
+        transparent 20%
+      );
+  }
 }

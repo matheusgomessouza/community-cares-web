@@ -38,8 +38,8 @@ export default function RootLayout({
   });
 
   const navLinks = [
-    { name: "About", href: "#" },
-    { name: "How It Works", href: "#" },
+    { name: "About", href: "/about" },
+    { name: "How It Works", href: "/how-it-works" },
     { name: "Testimonials", href: "#" },
   ];
 
