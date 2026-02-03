@@ -13,6 +13,7 @@ import { formatPhoneNumber } from "react-phone-number-input";
 import * as interfaces from "@/interfaces/index";
 import ProfileBoxContainerComponent from "@/components/ProfileBoxContainer/ProfileBoxContainerComponent";
 import { InputTelephoneIntlComponent } from "@/components/InputTelephoneIntl/InputTelephoneIntlComponent";
+import { MapPickerComponent } from "@/components/MapPicker/MapPickerComponent";
 
 export default function Location() {
   const imageRef = useRef<HTMLImageElement>(null);
@@ -24,10 +25,16 @@ export default function Location() {
     avatar_url: "",
   });
   const [hover, setHover] = useState<boolean>(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedCoords, setSelectedCoords] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const {
     handleSubmit,
     register,
     control,
+    setValue,
     formState: { errors },
   } = useForm<interfaces.LocationInputProps>({
     resolver: zodResolver(interfaces.LocationInputSchema),
@@ -35,6 +42,29 @@ export default function Location() {
   const onSubmit: SubmitHandler<interfaces.LocationInputProps> = (data) =>
     postLocation(data);
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleLocationSelect = (lat: number, lng: number) => {
+    setSelectedCoords({ lat, lng });
+    setValue("coords.latitude", lat);
+    setValue("coords.longitude", lng);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setValue("image", file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setValue("image", null);
+    setImagePreview(null);
+  };
 
   async function postLocation(data: interfaces.LocationInputProps) {
     try {
@@ -64,11 +94,11 @@ export default function Location() {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         if (response.status === 200)
           toast.success(
-            "Location successfully shared! Thank you for helping 🤗"
+            "Location successfully shared! Thank you for helping 🤗",
           );
       }
     } catch (error) {
@@ -98,7 +128,7 @@ export default function Location() {
         } catch (error) {
           console.error(
             "Unable to retrieve user data from GitHub API [getUserData]",
-            error
+            error,
           );
         }
       } else {
@@ -109,7 +139,7 @@ export default function Location() {
               headers: {
                 Authorization: `Bearer ${parsedGoogleInfo.access_token}`,
               },
-            }
+            },
           );
 
           return {
@@ -119,7 +149,7 @@ export default function Location() {
         } catch (error) {
           console.error(
             "Unable to retrieve user data from Google API [getUserData]",
-            error
+            error,
           );
         }
       }
@@ -247,27 +277,32 @@ export default function Location() {
         />
       </svg>
 
-      <header className="relative w-full flex justify-end items-center mb-8 max-w-xl mx-auto">
-        <div className="relative flex flex-col items-end">
-          <Image
-            src={
-              userData.avatar_url ?? "/assets/profile-mockup-image.png"
-            }
-            alt={userData.name}
-            className="bg-orange rounded-full cursor-pointer"
-            width={64}
-            height={64}
-            onMouseOver={() => setHover(true)}
-            ref={imageRef}
-          />
-          <ProfileBoxContainerComponent isHovered={hover} />
-        </div>
-      </header>
-
-      <div className="relative max-w-xl mx-auto bg-white rounded-3xl shadow-2xl p-8 md:p-10">
-        <h1 className="text-darkOrange text-2xl md:text-3xl text-center mb-8">
-          Share a location
+      <section
+        className="relative max-w-4xl mx-auto mb-24 mt-24 text-center px-4"
+        aria-labelledby="hero-heading"
+      >
+        <h1
+          id="hero-heading"
+          className="text-white text-4xl md:text-5xl font-paragraph font-bold mb-4"
+        >
+          Building communities that care.
         </h1>
+        <p className="text-white text-lg md:text-xl font-paragraph max-w-3xl mx-auto leading-relaxed">
+          A reimagined platform to connect people. Simple, accessible and
+          focused on what really matters: human connections.
+        </p>
+      </section>
+
+      <article
+        className="relative max-w-xl mx-auto bg-white rounded-3xl shadow-2xl p-8 md:p-10"
+        aria-labelledby="form-heading"
+      >
+        <h2
+          id="form-heading"
+          className="text-darkOrange text-2xl md:text-3xl text-center mb-8 font-heading font-bold"
+        >
+          Share a location
+        </h2>
 
         <form
           onSubmit={handleSubmit(onSubmit)}
@@ -372,39 +407,119 @@ export default function Location() {
             </span>
           )}
 
-          <label className="text-orange font-bold mb-2">Coordinates</label>
-          <input
-            type="text"
-            autoComplete="on"
-            {...register("coords.latitude")}
-            placeholder="Latitude"
-            className={
-              errors.coords?.latitude
-                ? "text-gray outline-red-500 border-red-500 border-solid border-2 rounded-lg px-2 h-10 mb-2"
-                : "text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-5"
-            }
+          <label className="text-orange font-bold mb-2">Location</label>
+          <p className="text-gray text-sm mb-4">
+            Click on the map to select the establishment location
+          </p>
+          <MapPickerComponent
+            onLocationSelect={handleLocationSelect}
+            initialLat={selectedCoords?.lat}
+            initialLng={selectedCoords?.lng}
           />
-          {errors.coords?.latitude && (
-            <span className="font-sans font-bold text-red-500 mb-4">
-              {errors.coords.latitude?.message}
-            </span>
-          )}
 
-          <input
-            type="text"
-            autoComplete="on"
-            {...register("coords.longitude")}
-            placeholder="Longitude"
-            className={
-              errors.coords?.longitude
-                ? "text-gray outline-red-500 border-red-500 border-solid border-2 rounded-lg px-2 h-10 mb-2"
-                : "text-gray outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 mb-5"
-            }
-          />
-          {errors.coords?.longitude && (
-            <span className="font-sans font-bold text-red-500 mb-4">
-              {errors.coords.longitude?.message}
-            </span>
+          <fieldset className="grid grid-cols-2 gap-4 mb-10">
+            <legend className="sr-only">Coordinates</legend>
+            <div>
+              <label className="text-orange font-bold mb-2 block">
+                Latitude
+              </label>
+              <input
+                type="text"
+                readOnly
+                {...register("coords.latitude")}
+                placeholder="Click on map"
+                className="text-gray bg-gray-100 outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 w-full"
+              />
+              {errors.coords?.latitude && (
+                <span className="font-sans font-bold text-red-500 text-sm mt-1 block">
+                  {errors.coords.latitude?.message}
+                </span>
+              )}
+            </div>
+            <div>
+              <label className="text-orange font-bold mb-2 block">
+                Longitude
+              </label>
+              <input
+                type="text"
+                readOnly
+                {...register("coords.longitude")}
+                placeholder="Click on map"
+                className="text-gray bg-gray-100 outline-orange border-solid border-gray border-2 rounded-lg px-2 h-10 w-full"
+              />
+              {errors.coords?.longitude && (
+                <span className="font-sans font-bold text-red-500 text-sm mt-1 block">
+                  {errors.coords.longitude?.message}
+                </span>
+              )}
+            </div>
+          </fieldset>
+
+          <label className="text-orange font-bold mb-2">Image (Optional)</label>
+          <p className="text-gray text-sm mb-4">
+            Upload a photo of the establishment
+          </p>
+
+          {!imagePreview ? (
+            <label
+              htmlFor="image-upload"
+              className="border-2 border-dashed border-orange rounded-lg p-8 flex flex-col items-center justify-center cursor-pointer hover:bg-orange hover:bg-opacity-5 transition-all mb-10"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-12 w-12 text-orange mb-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <span className="text-orange font-semibold">
+                Click to upload image
+              </span>
+              <span className="text-gray text-sm mt-1">
+                PNG, JPG up to 10MB
+              </span>
+              <input
+                id="image-upload"
+                disabled
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+            </label>
+          ) : (
+            <div className="relative mb-10 rounded-lg overflow-hidden border-2 border-orange">
+              <img
+                src={imagePreview}
+                alt="Preview"
+                className="w-full h-64 object-cover"
+              />
+              <button
+                type="button"
+                onClick={removeImage}
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
           )}
 
           <button
@@ -438,7 +553,7 @@ export default function Location() {
           </button>
           <ToastContainer />
         </form>
-      </div>
+      </article>
     </main>
   );
 }

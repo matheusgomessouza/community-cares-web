@@ -8,6 +8,7 @@ export interface LocationInputProps {
     latitude: number | string;
     longitude: number | string;
   };
+  image?: File | null;
 }
 
 export interface GoogleTokenAuthProps {
@@ -44,7 +45,7 @@ export interface GooglePeopleAPIProps {
       givenName: string;
       displayNameLastFirst: string;
       unstructuredName: string;
-    }
+    },
   ];
   photos: [
     {
@@ -56,7 +57,7 @@ export interface GooglePeopleAPIProps {
         };
       };
       url: string;
-    }
+    },
   ];
 }
 
@@ -91,6 +92,7 @@ export const LocationInputSchema: ZodType<LocationInputProps> = z
         .min(-180, { message: "Longitude must be between -180 and 180" })
         .max(180, { message: "Longitude must be between -180 and 180" }),
     }),
+    image: z.instanceof(File).optional().nullable(),
   })
   .required();
 
