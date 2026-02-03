@@ -29,19 +29,23 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body className={`${montserrat.variable} ${shrikhand.variable} h-full`}>
-        <header className="h-16 w-full bg-white justify-between items-center flex px-32">
-          <div className="flex items-center gap-4">
-            <MdOutlineHandshake size={40} color="" fill="#EE6A08" />
-            <h1 className="text-2xl font-heading text-darkOrange">
+        <header className="h-16 w-full bg-white justify-center items-center flex px-4 sm:px-8 md:px-16 lg:px-32">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <MdOutlineHandshake
+              className="w-8 h-8 sm:w-10 sm:h-10"
+              color=""
+              fill="#EE6A08"
+            />
+            <h1 className="text-lg sm:text-xl md:text-2xl font-heading text-darkOrange">
               Community Cares
             </h1>
           </div>
-          <nav>
-            <ul className="flex items-center gap-8">
+          <nav className="hidden md:block">
+            <ul className="flex items-center gap-4 lg:gap-8">
               <li>
                 <a
                   href="#"
-                  className="font-paragraph text-darkOrange text-base font-bold"
+                  className="font-paragraph text-darkOrange text-sm lg:text-base font-bold"
                 >
                   About
                 </a>
@@ -49,7 +53,7 @@ export default function RootLayout({
               <li>
                 <a
                   href="#"
-                  className="font-paragraph text-darkOrange text-base font-bold"
+                  className="font-paragraph text-darkOrange text-sm lg:text-base font-bold"
                 >
                   How It Works
                 </a>
@@ -57,7 +61,7 @@ export default function RootLayout({
               <li>
                 <a
                   href="#"
-                  className="font-paragraph text-darkOrange text-base font-bold"
+                  className="font-paragraph text-darkOrange text-sm lg:text-base font-bold"
                 >
                   Testimonials
                 </a>

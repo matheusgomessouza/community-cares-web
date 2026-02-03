@@ -5,17 +5,21 @@ import { GoogleButtonComponent } from "@/components/Button/GoogleButtonComponent
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-darkOrange">
-      <section className="text-center flex flex-col items-center bg-white min-w-96 min-h-96 rounded-xl shadow-lg p-8 mt-auto mb-auto drop-shadow-lg/25">
-        <h1 className="font-heading text-4xl mb-2 text-darkOrange">
+    <main className="flex min-h-screen flex-col items-center justify-between p-4 sm:p-8 md:p-24 bg-darkOrange">
+      <section className="text-center flex flex-col items-center bg-white w-full max-w-md min-h-96 rounded-xl shadow-lg p-6 sm:p-8 mt-auto mb-auto drop-shadow-lg/25">
+        <h1 className="font-heading text-3xl sm:text-4xl mb-2 text-darkOrange">
           Welcome Back
         </h1>
-        <span className="font-paragraph text-base text-gray mb-52">Sign in to your account</span>
-        
-        <div>
-          <span className="font-paragraph text-base text-gray">Connect with your community through helping hands</span>
+        <span className="font-paragraph text-sm sm:text-base text-gray mb-12 sm:mb-24 md:mb-52">
+          Sign in to your account
+        </span>
+
+        <div className="w-full">
+          <span className="font-paragraph text-sm sm:text-base text-gray">
+            Connect with your community through helping hands
+          </span>
           <Suspense fallback={<Loading />}>
-            <div className="flex gap-4 mt-6">
+            <div className="flex flex-col sm:flex-row gap-4 mt-6 w-full justify-center items-center">
               <GitHubButtonComponent />
               <GoogleOAuthProvider
                 clientId={
@@ -28,7 +32,16 @@ export default function Home() {
               </GoogleOAuthProvider>
             </div>
           </Suspense>
-          <p className="font-paragraph text-gray mt-8 text-base">By continuing, you agree to our <strong className="font-paragraph text-darkOrange text-base font-bold">Terms</strong> and <strong className="font-paragraph text-darkOrange text-base font-bold">Privacy Policy</strong></p>
+          <p className="font-paragraph text-gray mt-6 sm:mt-8 text-xs sm:text-base px-2">
+            By continuing, you agree to our{" "}
+            <strong className="font-paragraph text-darkOrange text-xs sm:text-base font-bold">
+              Terms
+            </strong>{" "}
+            and{" "}
+            <strong className="font-paragraph text-darkOrange text-xs sm:text-base font-bold">
+              Privacy Policy
+            </strong>
+          </p>
         </div>
       </section>
     </main>
@@ -38,4 +51,3 @@ export default function Home() {
 function Loading() {
   return <p>Loading...</p>;
 }
-
