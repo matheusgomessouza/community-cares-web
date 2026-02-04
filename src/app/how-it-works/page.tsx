@@ -256,12 +256,14 @@ export default function HowItWorksPage() {
                 Add a Location Now
               </button>
             )}
-            {!isLoggedIn && <Link
-              href="/"
-              className="text-gray underline hover:text-darkOrange font-paragraph transition-colors"
-            >
-              Back to Login
-            </Link>}
+            {!isLoggedIn && (
+              <Link
+                href="/"
+                className="text-gray underline hover:text-darkOrange font-paragraph transition-colors"
+              >
+                Back to Login
+              </Link>
+            )}
           </div>
         </section>
       </div>
