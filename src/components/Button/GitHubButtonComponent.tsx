@@ -72,7 +72,6 @@ export function GitHubButtonComponent() {
 
   const authenticateWithGithub = useCallback(async () => {
     try {
-      setIsAuthenticating(true);
       const code = params.get("code");
       if (!code) return;
 

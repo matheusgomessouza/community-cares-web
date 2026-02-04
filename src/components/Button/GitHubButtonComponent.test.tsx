@@ -20,9 +20,9 @@ vi.mock("axios", () => {
   const mockPost = vi.fn();
   return {
     default: {
-      post: mockPost
+      post: mockPost,
     },
-    post: mockPost
+    post: mockPost,
   };
 });
 
@@ -33,10 +33,11 @@ const mockedAxios = vi.mocked(axios, true);
 describe("Authorization component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockedAxios.post.mockReset();
     searchParams = new URLSearchParams();
     process.env.NEXT_PUBLIC_CLIENT_ID = "client_123";
     process.env.NEXT_PUBLIC_API = "https://api.example.com";
-    window.localStorage.clear();
+    window.sessionStorage.clear();
   });
 
   test("if the component render as expected", () => {
@@ -53,15 +54,15 @@ describe("Authorization component", () => {
 
     await userEvent.click(button);
     expect(pushMock).toHaveBeenCalledWith(
-      `https://github.com/login/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_CLIENT_ID_DEV}`
+      `https://github.com/login/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_CLIENT_ID_DEV}`,
     );
   });
-  
+
   test("exchanges code for token and redirects on success", async () => {
     searchParams = new URLSearchParams("code=abc123");
-    
+
     // Set up the mock for axios.post
-    mockedAxios.post.mockResolvedValueOnce({
+    mockedAxios.post.mockResolvedValue({
       status: 200,
       data: { access_token: "token_456" },
     });
@@ -72,35 +73,34 @@ describe("Authorization component", () => {
 
     await waitFor(() => {
       expect(mockedAxios.post).toHaveBeenCalledWith(
-        `${process.env.NEXT_PUBLIC_API}/authenticate`,
-        { code: "abc123", env: "web" }
+        `${process.env.NEXT_PUBLIC_API}/users/authenticate/github`,
+        { code: "abc123", env: "web" },
       );
     });
-    
+
     // Wait for the localStorage call
     await waitFor(() => {
-      expect(setItemSpy).toHaveBeenCalledWith(
-        "github-token",
-        "token_456"
-      );
+      expect(setItemSpy).toHaveBeenCalledWith("github-token", "token_456");
     });
 
     // Check that navigation happened
     expect(pushMock).toHaveBeenCalledWith("/location");
   });
-  
+
   test("shows error message when authentication request fails", async () => {
     searchParams = new URLSearchParams("code=badcode");
-    
+
     // Set up the mock for axios.post to reject
-    mockedAxios.post.mockRejectedValueOnce(new Error("network error"));
+    mockedAxios.post.mockRejectedValue(new Error("network error"));
 
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const setItemSpy = vi.spyOn(Storage.prototype, "setItem");
 
     render(<GitHubButtonComponent />);
 
-    expect(await screen.findByText("Error on the authentication request")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Error on the authentication request"),
+    ).toBeInTheDocument();
     expect(pushMock).not.toHaveBeenCalled();
     expect(setItemSpy).not.toHaveBeenCalled();
 
