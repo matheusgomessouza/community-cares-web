@@ -78,7 +78,7 @@ describe("Authorization component", () => {
       );
     });
 
-    // Wait for the localStorage call
+    // Wait for the sessionStorage call
     await waitFor(() => {
       expect(setItemSpy).toHaveBeenCalledWith("github-token", "token_456");
     });
