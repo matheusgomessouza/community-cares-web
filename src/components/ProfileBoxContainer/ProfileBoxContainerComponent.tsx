@@ -1,3 +1,4 @@
+import React from "react";
 import { FaPowerOff } from "react-icons/fa6";
 import { useRouter } from "next/navigation";
 
@@ -46,8 +47,8 @@ export default function ProfileBoxContainerComponent({
         <h2
           className="text-orange font-medium cursor-pointer text-sm"
           onClick={() => {
-            localStorage.removeItem("github-token");
-            localStorage.removeItem("google-token");
+            sessionStorage.removeItem("github-token");
+            sessionStorage.removeItem("google-token");
             router.push("/");
           }}
         >

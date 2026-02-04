@@ -44,8 +44,8 @@ export default function RootLayout({
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem("github-token");
-    localStorage.removeItem("google-token");
+    sessionStorage.removeItem("github-token");
+    sessionStorage.removeItem("google-token");
     setUserData({ name: "", avatar_url: "" });
     setAuthProvider("");
     setIsLoggedIn(false);
@@ -55,8 +55,8 @@ export default function RootLayout({
 
   useEffect(() => {
     const checkAuthAndFetchData = async () => {
-      const githubToken = localStorage.getItem("github-token");
-      const googleToken = localStorage.getItem("google-token");
+      const githubToken = sessionStorage.getItem("github-token");
+      const googleToken = sessionStorage.getItem("google-token");
 
       if (githubToken || googleToken) {
         setIsLoggedIn(true);
@@ -77,14 +77,16 @@ export default function RootLayout({
                 avatar_url: data.avatar_url,
               });
               setAuthProvider("GitHub");
-            } catch (error) {
+            } catch (error: any) {
               console.error(
                 "Unable to retrieve user data from GitHub API",
                 error,
               );
-              localStorage.removeItem("github-token");
-              setIsLoggedIn(false);
-              setUserData({ name: "", avatar_url: "" });
+              if (error.response?.status === 401) {
+                sessionStorage.removeItem("github-token");
+                setIsLoggedIn(false);
+                setUserData({ name: "", avatar_url: "" });
+              }
             }
           } else if (googleToken) {
             try {
@@ -102,14 +104,16 @@ export default function RootLayout({
                 avatar_url: data.photos[0].url,
               });
               setAuthProvider("Google");
-            } catch (error) {
+            } catch (error: any) {
               console.error(
                 "Unable to retrieve user data from Google API",
                 error,
               );
-              localStorage.removeItem("google-token");
-              setIsLoggedIn(false);
-              setUserData({ name: "", avatar_url: "" });
+              if (error.response?.status === 401) {
+                sessionStorage.removeItem("google-token");
+                setIsLoggedIn(false);
+                setUserData({ name: "", avatar_url: "" });
+              }
             }
           }
         } catch (error) {
@@ -124,8 +128,8 @@ export default function RootLayout({
 
     const interval = setInterval(() => {
       const hasToken =
-        localStorage.getItem("github-token") ||
-        localStorage.getItem("google-token");
+        sessionStorage.getItem("github-token") ||
+        sessionStorage.getItem("google-token");
       if (hasToken && !isLoggedIn) {
         checkAuthAndFetchData();
       }

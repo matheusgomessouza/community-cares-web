@@ -2,7 +2,7 @@
 
 import React from "react";
 import axios from "axios";
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { IoLogoGithub } from "react-icons/io";
 
@@ -11,23 +11,26 @@ export function GitHubButtonComponent() {
   const [errorOnRequest, setErrorOnRequest] = useState<boolean>(false);
   const params = useSearchParams();
   const router = useRouter();
+  const isAuthCalled = useRef(false);
 
   const authenticateWithGithub = useCallback(async () => {
     try {
-      setIsAuthenticating(true);
       const code = params.get("code");
 
-      if (code) {
+      if (code && !isAuthCalled.current) {
+        isAuthCalled.current = true;
+        setIsAuthenticating(true);
+
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_API}/users/authenticate/github`,
           {
             code: code,
             env: "web",
-          }
+          },
         );
 
         if (response.status === 200) {
-          localStorage.setItem("github-token", response.data.access_token);
+          sessionStorage.setItem("github-token", response.data.access_token);
           router.push("/location");
         }
       }
@@ -36,7 +39,7 @@ export function GitHubButtonComponent() {
       setErrorOnRequest(true);
       console.error(
         "Unable to retrieve access_token from Community Cares Server [authenticateWithGithub]",
-        error
+        error,
       );
     } finally {
       setIsAuthenticating(false);
@@ -58,7 +61,7 @@ export function GitHubButtonComponent() {
             `https://github.com/login/oauth/authorize?client_id=${
               process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID ||
               process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID_DEV
-            }`
+            }`,
           );
         }}
       >

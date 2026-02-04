@@ -96,8 +96,8 @@ export default function HowItWorksPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const githubToken = localStorage.getItem("github-token");
-    const googleToken = localStorage.getItem("google-token");
+    const githubToken = sessionStorage.getItem("github-token");
+    const googleToken = sessionStorage.getItem("google-token");
     if (githubToken || googleToken) {
       setIsLoggedIn(true);
     }
@@ -256,12 +256,12 @@ export default function HowItWorksPage() {
                 Add a Location Now
               </button>
             )}
-            <Link
+            {!isLoggedIn && <Link
               href="/"
               className="text-gray underline hover:text-darkOrange font-paragraph transition-colors"
             >
               Back to Login
-            </Link>
+            </Link>}
           </div>
         </section>
       </div>

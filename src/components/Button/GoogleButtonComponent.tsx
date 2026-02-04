@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { IoLogoGoogle } from "react-icons/io5";
 import {
@@ -21,22 +21,22 @@ export function GoogleButtonComponent() {
     onSuccess: async (
       codeResponse:
         | interfaces.GoogleCodeAuthProps
-        | Omit<CodeResponse, "error" | "error_description" | "error_uri">
+        | Omit<CodeResponse, "error" | "error_description" | "error_uri">,
     ) => {
       const { code } = codeResponse;
 
       if (code) {
         try {
           setIsAuthenticating(true);
-          
+
           const response = await axios.post<interfaces.GoogleAccessTokenProps>(
             `${process.env.NEXT_PUBLIC_API}/users/authenticate/google`,
             {
               code: code,
-            }
+            },
           );
 
-          localStorage.setItem(
+          sessionStorage.setItem(
             "google-token",
             JSON.stringify({
               access_token: response.data.access_token,
@@ -45,7 +45,7 @@ export function GoogleButtonComponent() {
               token_type: response.data.token_type,
               id_token: response.data.id_token,
               expiry_date: response.data.expiry_date,
-            })
+            }),
           );
           router.push("/location");
         } catch (error) {
