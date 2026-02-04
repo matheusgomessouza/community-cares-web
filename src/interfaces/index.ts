@@ -8,6 +8,7 @@ export interface LocationInputProps {
     latitude: number | string;
     longitude: number | string;
   };
+  image?: File | null;
 }
 
 export interface GoogleTokenAuthProps {
@@ -44,7 +45,7 @@ export interface GooglePeopleAPIProps {
       givenName: string;
       displayNameLastFirst: string;
       unstructuredName: string;
-    }
+    },
   ];
   photos: [
     {
@@ -56,7 +57,7 @@ export interface GooglePeopleAPIProps {
         };
       };
       url: string;
-    }
+    },
   ];
 }
 
@@ -76,12 +77,29 @@ export const LocationInputSchema: ZodType<LocationInputProps> = z
       message: "Please select a establishment type",
     }),
     address: z.string().min(1, { message: "Required field" }),
-    telephone: z
-      .string({ message: "Required field" })
-      .min(13, { message: "Invalid telephone number format" }),
+    telephone: z.string().min(1, { message: "Required field" }),
     coords: z.object({
-      latitude: z.string().min(9, { message: "Invalid latitude" }),
-      longitude: z.string().min(9, { message: "Invalid longitude" }),
+      latitude: z.coerce
+        .number({
+          invalid_type_error: "Latitude must be a number",
+        })
+        .min(-90, { message: "Latitude must be between -90 and 90" })
+        .max(90, { message: "Latitude must be between -90 and 90" }),
+      longitude: z.coerce
+        .number({
+          invalid_type_error: "Longitude must be a number",
+        })
+        .min(-180, { message: "Longitude must be between -180 and 180" })
+        .max(180, { message: "Longitude must be between -180 and 180" }),
     }),
+    image: z.instanceof(File).optional().nullable(),
   })
   .required();
+
+export interface InputTelephoneIntlProps {
+  onChange: (value: string | undefined) => void;
+  onBlur: () => void;
+  value: string;
+  name: string;
+  disabled?: boolean;
+}

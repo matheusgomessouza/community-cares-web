@@ -16,26 +16,28 @@
   }
 }
 
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
 }
 
 h1 {
   font-family: var(--font-heading);
 }
 
-p, label {
+p,
+label {
   font-family: var(--font-paragraph);
 }
 
 select::after {
-  content: '\25BC'; /* Unicode arrow-down character */
+  content: "\25BC"; /* Unicode arrow-down character */
   position: absolute;
   top: 50%;
   right: 3px;
@@ -46,5 +48,33 @@ select::after {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Screen reader only - hides content visually but keeps it accessible to assistive technologies */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Padrão para hero sticky backgrounds */
+  .sticky-hero-pattern {
+    background-image:
+      radial-gradient(
+        circle at 10% 20%,
+        rgba(255, 255, 255, 0.05) 0%,
+        transparent 20%
+      ),
+      radial-gradient(
+        circle at 90% 80%,
+        rgba(255, 255, 255, 0.05) 0%,
+        transparent 20%
+      );
   }
 }
