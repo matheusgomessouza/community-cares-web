@@ -69,8 +69,8 @@ export default function Location() {
   async function postLocation(data: interfaces.LocationInputProps) {
     try {
       setIsLoading(true);
-      const githubToken = localStorage.getItem("github-token");
-      const googleToken = localStorage.getItem("google-token");
+      const githubToken = sessionStorage.getItem("github-token");
+      const googleToken = sessionStorage.getItem("google-token");
       const parsedGoogleInfo = googleToken && JSON.parse(googleToken);
 
       const token = githubToken
@@ -112,8 +112,8 @@ export default function Location() {
 
   async function getUserData() {
     try {
-      const githubToken = localStorage.getItem("github-token");
-      const googleToken = localStorage.getItem("google-token");
+      const githubToken = sessionStorage.getItem("github-token");
+      const googleToken = sessionStorage.getItem("google-token");
       const parsedGoogleInfo = googleToken && JSON.parse(googleToken);
 
       if (githubToken) {
