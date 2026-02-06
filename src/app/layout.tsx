@@ -5,8 +5,9 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { MdOutlineHandshake } from "react-icons/md";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
-import axios from "axios";
+import api from "@/lib/api";
 
 import "./globals.css";
 
@@ -29,6 +30,7 @@ export default function RootLayout({
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [authProvider, setAuthProvider] = useState<string>("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const pathname = usePathname();
   const [userData, setUserData] = useState<{
     name: string;
     avatar_url: string;
@@ -43,96 +45,57 @@ export default function RootLayout({
     { name: "Testimonials", href: "#" },
   ];
 
-  const handleLogout = () => {
-    localStorage.removeItem("github-token");
-    localStorage.removeItem("google-token");
-    setUserData({ name: "", avatar_url: "" });
-    setAuthProvider("");
-    setIsLoggedIn(false);
-    setIsUserDropdownOpen(false);
-    window.location.href = "/";
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout");
+      setUserData({ name: "", avatar_url: "" });
+      setAuthProvider("");
+      setIsLoggedIn(false);
+      setIsUserDropdownOpen(false);
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Logout failed", error);
+      setUserData({ name: "", avatar_url: "" });
+      setAuthProvider("");
+      setIsLoggedIn(false);
+      setIsUserDropdownOpen(false);
+      window.location.href = "/";
+    }
   };
 
   useEffect(() => {
+    let mounted = true;
+
     const checkAuthAndFetchData = async () => {
-      const githubToken = localStorage.getItem("github-token");
-      const googleToken = localStorage.getItem("google-token");
-
-      if (githubToken || googleToken) {
-        setIsLoggedIn(true);
-
-        try {
-          const parsedGoogleInfo = googleToken && JSON.parse(googleToken);
-
-          if (githubToken) {
-            try {
-              const { data } = await axios.get("https://api.github.com/user", {
-                headers: {
-                  Authorization: `Bearer ${githubToken}`,
-                },
-              });
-
-              setUserData({
-                name: data.name || data.login,
-                avatar_url: data.avatar_url,
-              });
-              setAuthProvider("GitHub");
-            } catch (error) {
-              console.error(
-                "Unable to retrieve user data from GitHub API",
-                error,
-              );
-              localStorage.removeItem("github-token");
-              setIsLoggedIn(false);
-              setUserData({ name: "", avatar_url: "" });
-            }
-          } else if (googleToken) {
-            try {
-              const { data } = await axios.get(
-                "https://people.googleapis.com/v1/people/me?personFields=names,photos",
-                {
-                  headers: {
-                    Authorization: `Bearer ${parsedGoogleInfo.access_token}`,
-                  },
-                },
-              );
-
-              setUserData({
-                name: data.names[0].displayName,
-                avatar_url: data.photos[0].url,
-              });
-              setAuthProvider("Google");
-            } catch (error) {
-              console.error(
-                "Unable to retrieve user data from Google API",
-                error,
-              );
-              localStorage.removeItem("google-token");
-              setIsLoggedIn(false);
-              setUserData({ name: "", avatar_url: "" });
-            }
-          }
-        } catch (error) {
-          console.error("Unable to retrieve user token", error);
+      try {
+        const { data } = await api.get("/auth/me");
+        if (data && (data.name || data.avatar_url || data.provider)) {
+          setIsLoggedIn(true);
+          setUserData({
+            name: data.name ?? "",
+            avatar_url: data.avatar_url ?? "",
+          });
+          setAuthProvider(data.provider ?? "");
+        } else {
+          setIsLoggedIn(false);
+          setUserData({ name: "", avatar_url: "" });
+          setAuthProvider("");
         }
-      } else {
+      } catch (error) {
+        if (!mounted) return;
         setIsLoggedIn(false);
+        setUserData({ name: "", avatar_url: "" });
+        setAuthProvider("");
+        console.error("/auth/me failed", error);
       }
     };
 
     checkAuthAndFetchData();
 
-    const interval = setInterval(() => {
-      const hasToken =
-        localStorage.getItem("github-token") ||
-        localStorage.getItem("google-token");
-      if (hasToken && !isLoggedIn) {
-        checkAuthAndFetchData();
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isLoggedIn]);
+    return () => {
+      mounted = false;
+    };
+  }, [pathname]);
 
   return (
     <html lang="en" className="h-full">

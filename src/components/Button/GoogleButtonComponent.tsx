@@ -8,7 +8,7 @@ import {
   TokenResponse,
   useGoogleLogin,
 } from "@react-oauth/google";
-import axios from "axios";
+import api from "@/lib/api";
 
 import * as interfaces from "@/interfaces/index";
 
@@ -21,32 +21,20 @@ export function GoogleButtonComponent() {
     onSuccess: async (
       codeResponse:
         | interfaces.GoogleCodeAuthProps
-        | Omit<CodeResponse, "error" | "error_description" | "error_uri">
+        | Omit<CodeResponse, "error" | "error_description" | "error_uri">,
     ) => {
       const { code } = codeResponse;
 
       if (code) {
         try {
           setIsAuthenticating(true);
-          
-          const response = await axios.post<interfaces.GoogleAccessTokenProps>(
-            `${process.env.NEXT_PUBLIC_API}/users/authenticate/google`,
-            {
-              code: code,
-            }
-          );
 
-          localStorage.setItem(
-            "google-token",
-            JSON.stringify({
-              access_token: response.data.access_token,
-              refresh_token: response.data.refresh_token,
-              scope: response.data.scope,
-              token_type: response.data.token_type,
-              id_token: response.data.id_token,
-              expiry_date: response.data.expiry_date,
-            })
-          );
+          const response = await api.post(`/users/authenticate/google`, {
+            code: code,
+            env: "web",
+          });
+
+          await api.get("/auth/me"); // Ensure session is established
           router.push("/location");
         } catch (error) {
           setIsAuthenticating(false);

@@ -1,7 +1,5 @@
 "use client";
 
-import axios from "axios";
-import Image from "next/image";
 import { IoIosSend } from "react-icons/io";
 import { useEffect, useState, useRef } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,8 +8,8 @@ import { ToastContainer, toast } from "react-toastify";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { formatPhoneNumber } from "react-phone-number-input";
 
+import api from "@/lib/api";
 import * as interfaces from "@/interfaces/index";
-import ProfileBoxContainerComponent from "@/components/ProfileBoxContainer/ProfileBoxContainerComponent";
 import { InputTelephoneIntlComponent } from "@/components/InputTelephoneIntl/InputTelephoneIntlComponent";
 import { MapPickerComponent } from "@/components/MapPicker/MapPickerComponent";
 
@@ -69,38 +67,18 @@ export default function Location() {
   async function postLocation(data: interfaces.LocationInputProps) {
     try {
       setIsLoading(true);
-      const githubToken = localStorage.getItem("github-token");
-      const googleToken = localStorage.getItem("google-token");
-      const parsedGoogleInfo = googleToken && JSON.parse(googleToken);
 
-      const token = githubToken
-        ? githubToken
-        : String(parsedGoogleInfo.access_token);
-
-      if (token) {
-        const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API}/pending-locations`,
-          {
-            name: data.name,
-            type: data.type,
-            address: data.address,
-            contact: data.telephone
-              ? formatPhoneNumber(data.telephone)
-              : data.telephone,
-            coords: data.coords,
-            provider: githubToken ? "github" : "google",
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-        if (response.status === 200)
-          toast.success(
-            "Location successfully shared! Thank you for helping 🤗",
-          );
-      }
+      const response = await api.post(`/pending-locations`, {
+        name: data.name,
+        type: data.type,
+        address: data.address,
+        contact: data.telephone
+          ? formatPhoneNumber(data.telephone)
+          : data.telephone,
+        coords: data.coords,
+      });
+      if (response.status === 200)
+        toast.success("Location successfully shared! Thank you for helping 🤗");
     } catch (error) {
       setIsLoading(false);
       toast.error("Unable to share location, please try again. 😓");
@@ -112,49 +90,15 @@ export default function Location() {
 
   async function getUserData() {
     try {
-      const githubToken = localStorage.getItem("github-token");
-      const googleToken = localStorage.getItem("google-token");
-      const parsedGoogleInfo = googleToken && JSON.parse(googleToken);
-
-      if (githubToken) {
-        try {
-          const { data } = await axios.get("https://api.github.com/user", {
-            headers: {
-              Authorization: `Bearer ${githubToken}`,
-            },
-          });
-
-          return data;
-        } catch (error) {
-          console.error(
-            "Unable to retrieve user data from GitHub API [getUserData]",
-            error,
-          );
-        }
-      } else {
-        try {
-          const { data } = await axios.get<interfaces.GooglePeopleAPIProps>(
-            "https://people.googleapis.com/v1/people/me?personFields=names,photos",
-            {
-              headers: {
-                Authorization: `Bearer ${parsedGoogleInfo.access_token}`,
-              },
-            },
-          );
-
-          return {
-            name: data.names[0].displayName,
-            avatar_url: data.photos[0].url,
-          };
-        } catch (error) {
-          console.error(
-            "Unable to retrieve user data from Google API [getUserData]",
-            error,
-          );
-        }
+      const { data } = await api.get("/auth/me");
+      if (data) {
+        return {
+          name: data.name || data.login || data.displayName,
+          avatar_url: data.avatar_url,
+        };
       }
     } catch (error) {
-      console.error("Unable to retrieve user user token [getUserData]", error);
+      console.error("Unable to retrieve user data [getUserData]", error);
     }
   }
 
