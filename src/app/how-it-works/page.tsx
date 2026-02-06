@@ -101,6 +101,7 @@ export default function HowItWorksPage() {
       .get("/auth/me")
       .then(() => setIsLoggedIn(true))
       .catch(() => setIsLoggedIn(false));
+
   }, []);
 
   const steps = [

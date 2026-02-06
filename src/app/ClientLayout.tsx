@@ -2,6 +2,7 @@
 
 import { MdOutlineHandshake } from "react-icons/md";
 import { useState, useEffect } from "react";
+
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import api from "@/lib/api";
@@ -15,6 +16,7 @@ export default function ClientLayout({
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [authProvider, setAuthProvider] = useState<string>("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   const pathname = usePathname();
   const [userData, setUserData] = useState<{
     name: string;
@@ -81,6 +83,7 @@ export default function ClientLayout({
       mounted = false;
     };
   }, [pathname]);
+
 
   return (
     <>
