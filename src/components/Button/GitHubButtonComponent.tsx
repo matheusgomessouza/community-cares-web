@@ -42,7 +42,9 @@ export function GitHubButtonComponent() {
       process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID ||
       process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID_DEV;
     if (!clientId) {
-      console.error("Missing NEXT_PUBLIC_GITHUB_CLIENT_ID");
+      console.error(
+        "Missing GitHub OAuth client ID. Set NEXT_PUBLIC_GITHUB_CLIENT_ID or NEXT_PUBLIC_GITHUB_CLIENT_ID_DEV."
+      );
       setErrorOnRequest("Configuração de OAuth ausente. Contate o suporte.");
       return;
     }
