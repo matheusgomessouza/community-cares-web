@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import api from "@/lib/api";
 import {
   MdAddLocationAlt,
   MdOutlinePhotoCamera,
@@ -96,11 +97,11 @@ export default function HowItWorksPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const githubToken = sessionStorage.getItem("github-token");
-    const googleToken = sessionStorage.getItem("google-token");
-    if (githubToken || googleToken) {
-      setIsLoggedIn(true);
-    }
+    api
+      .get("/auth/me")
+      .then(() => setIsLoggedIn(true))
+      .catch(() => setIsLoggedIn(false));
+
   }, []);
 
   const steps = [

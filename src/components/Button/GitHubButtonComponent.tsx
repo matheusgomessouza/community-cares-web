@@ -1,54 +1,124 @@
 "use client";
 
-import React from "react";
-import axios from "axios";
-import { useEffect, useCallback, useState, useRef } from "react";
+import React, { useRef } from "react";
+import api from "@/lib/api";
+import { useEffect, useCallback, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { IoLogoGithub } from "react-icons/io";
 
+const GITHUB_AUTHORIZE_URL = "https://github.com/login/oauth/authorize";
+const GITHUB_SCOPES = "read:user user:email";
+
+async function sha256(buffer: ArrayBuffer) {
+  const digest = await crypto.subtle.digest("SHA-256", buffer);
+  return new Uint8Array(digest);
+}
+function base64UrlEncode(buffer: Uint8Array) {
+  return btoa(String.fromCharCode(...Array.from(buffer)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+async function generateCodeChallenge(verifier: string) {
+  const enc = new TextEncoder().encode(verifier);
+  const hashed = await sha256(enc.buffer);
+  return base64UrlEncode(hashed);
+}
+function generateRandomString(length = 64) {
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+  return base64UrlEncode(array).slice(0, length);
+}
+
 export function GitHubButtonComponent() {
   const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
-  const [errorOnRequest, setErrorOnRequest] = useState<boolean>(false);
+  const [errorOnRequest, setErrorOnRequest] = useState<string | null>(null);
   const params = useSearchParams();
   const router = useRouter();
-  const isAuthCalled = useRef(false);
+  const processedRef = useRef(false);
+
+  const startGithubFlow = useCallback(async () => {
+    const clientId =
+      process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID ||
+      process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID_DEV;
+    if (!clientId) {
+      console.error(
+        "Missing GitHub OAuth client ID. Set NEXT_PUBLIC_GITHUB_CLIENT_ID or NEXT_PUBLIC_GITHUB_CLIENT_ID_DEV."
+      );
+      setErrorOnRequest("Configuração de OAuth ausente. Contate o suporte.");
+      return;
+    }
+
+    try {
+      setIsAuthenticating(true);
+      const codeVerifier = generateRandomString(96);
+      const codeChallenge = await generateCodeChallenge(codeVerifier);
+
+      sessionStorage.setItem("github_code_verifier", codeVerifier);
+
+      const params = new URLSearchParams({
+        client_id: clientId,
+        scope: GITHUB_SCOPES,
+        response_type: "code",
+        code_challenge: codeChallenge,
+        code_challenge_method: "S256",
+      });
+
+      window.location.href = `${GITHUB_AUTHORIZE_URL}?${params.toString()}`;
+    } catch (err) {
+      console.error("Failed to start GitHub OAuth flow", err);
+      setErrorOnRequest("Erro ao iniciar autenticação. Tente novamente.");
+      setIsAuthenticating(false);
+    }
+  }, []);
 
   const authenticateWithGithub = useCallback(async () => {
     try {
       const code = params.get("code");
+      if (!code) return;
 
-      if (code && !isAuthCalled.current) {
-        isAuthCalled.current = true;
-        setIsAuthenticating(true);
+      const codeVerifier =
+        sessionStorage.getItem("github_code_verifier") || undefined;
 
-        const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API}/users/authenticate/github`,
-          {
-            code: code,
-            env: "web",
-          },
+      const response = await api.post(`/users/authenticate/github`, {
+        code,
+        env: "web",
+        code_verifier: codeVerifier,
+      });
+
+      if (response.status === 200) {
+        await api.get("/auth/me");
+        sessionStorage.removeItem("github_code_verifier");
+        const url = new URL(window.location.href);
+        url.searchParams.delete("code");
+        window.history.replaceState({}, document.title, url.toString());
+
+        router.push("/location");
+      } else {
+        console.error(
+          "Unexpected response from /users/authenticate/github",
+          response,
         );
-
-        if (response.status === 200) {
-          sessionStorage.setItem("github-token", response.data.access_token);
-          router.push("/location");
-        }
+        setErrorOnRequest("Falha na autenticação. Tente novamente.");
       }
     } catch (error) {
-      setIsAuthenticating(false);
-      setErrorOnRequest(true);
       console.error(
         "Unable to retrieve access_token from Community Cares Server [authenticateWithGithub]",
         error,
       );
+      setErrorOnRequest("Erro na autenticação. Verifique e tente novamente.");
     } finally {
       setIsAuthenticating(false);
     }
   }, [params, router]);
 
   useEffect(() => {
-    authenticateWithGithub();
-  }, [authenticateWithGithub]);
+    if (processedRef.current) return;
+    if (params.get("code")) {
+      processedRef.current = true;
+      authenticateWithGithub();
+    }
+  }, [authenticateWithGithub, params]);
 
   return (
     <>
@@ -57,12 +127,7 @@ export function GitHubButtonComponent() {
         type="button"
         disabled={isAuthenticating}
         onClick={async () => {
-          router.push(
-            `https://github.com/login/oauth/authorize?client_id=${
-              process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID ||
-              process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID_DEV
-            }`,
-          );
+          await startGithubFlow();
         }}
       >
         {isAuthenticating ? (
@@ -90,10 +155,9 @@ export function GitHubButtonComponent() {
           </>
         )}
       </button>
+
       {errorOnRequest && (
-        <p className="text-red-600 font-bold mt-4">
-          Error on the authentication request
-        </p>
+        <p className="text-red-600 font-bold mt-4">{errorOnRequest}</p>
       )}
     </>
   );
