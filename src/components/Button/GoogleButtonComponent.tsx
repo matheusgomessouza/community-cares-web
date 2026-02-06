@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { IoLogoGoogle } from "react-icons/io5";
 import {
   CodeResponse,
-  TokenResponse,
   useGoogleLogin,
 } from "@react-oauth/google";
 import api from "@/lib/api";
@@ -29,12 +28,12 @@ export function GoogleButtonComponent() {
         try {
           setIsAuthenticating(true);
 
-          const response = await api.post(`/users/authenticate/google`, {
+          await api.post(`/users/authenticate/google`, {
             code: code,
             env: "web",
           });
 
-          await api.get("/auth/me"); // Ensure session is established
+          await api.get("/auth/me");
           router.push("/location");
         } catch (error) {
           setIsAuthenticating(false);
