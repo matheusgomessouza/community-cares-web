@@ -320,7 +320,7 @@ export default function AboutPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <a
               href="/"
-              className="inline-block bg-white text-darkOrange font-paragraph font-semibold px-8 py-4 rounded-full hover:bg-orange/10 hover:border-white hover:border-2 hover:text-white transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-white/50 shadow-lg"
+              className="inline-block bg-white text-darkOrange font-paragraph font-semibold px-8 py-4 rounded-full border-2 border-transparent hover:bg-orange/10 hover:border-white hover:text-white transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-white/50 shadow-lg"
               aria-label="Find food locations near you"
             >
               Find Food Locations
