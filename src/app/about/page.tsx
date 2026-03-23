@@ -124,7 +124,7 @@ export default function AboutPage() {
           <p className="font-paragraph text-lg sm:text-xl md:text-2xl leading-relaxed mb-8 text-white/90">
             We connect people in need with free food giveaway locations through
             an accessible, compassionate platform. Because everyone deserves a
-            helping hand. 
+            helping hand.
           </p>
           <div
             className="inline-flex items-center gap-2 text-white/80 font-paragraph text-sm md:text-base"
