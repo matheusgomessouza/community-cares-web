@@ -5,10 +5,9 @@ import { useRouter } from "next/navigation";
 import { IoLogoGoogle } from "react-icons/io5";
 import {
   CodeResponse,
-  TokenResponse,
   useGoogleLogin,
 } from "@react-oauth/google";
-import axios from "axios";
+import api from "@/lib/api";
 
 import * as interfaces from "@/interfaces/index";
 
@@ -29,24 +28,12 @@ export function GoogleButtonComponent() {
         try {
           setIsAuthenticating(true);
 
-          const response = await axios.post<interfaces.GoogleAccessTokenProps>(
-            `${process.env.NEXT_PUBLIC_API}/users/authenticate/google`,
-            {
-              code: code,
-            },
-          );
+          await api.post(`/users/authenticate/google`, {
+            code: code,
+            env: "web",
+          });
 
-          sessionStorage.setItem(
-            "google-token",
-            JSON.stringify({
-              access_token: response.data.access_token,
-              refresh_token: response.data.refresh_token,
-              scope: response.data.scope,
-              token_type: response.data.token_type,
-              id_token: response.data.id_token,
-              expiry_date: response.data.expiry_date,
-            }),
-          );
+          await api.get("/auth/me");
           router.push("/location");
         } catch (error) {
           setIsAuthenticating(false);
