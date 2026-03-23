@@ -3,10 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { IoLogoGoogle } from "react-icons/io5";
-import {
-  CodeResponse,
-  useGoogleLogin,
-} from "@react-oauth/google";
+import { CodeResponse, useGoogleLogin } from "@react-oauth/google";
 import api from "@/lib/api";
 
 import * as interfaces from "@/interfaces/index";
@@ -68,7 +65,7 @@ export function GoogleButtonComponent() {
                 cy="50"
                 r="40"
                 stroke="green"
-                stroke-width="4"
+                strokeWidth="4"
                 fill="yellow"
               />
             </svg>

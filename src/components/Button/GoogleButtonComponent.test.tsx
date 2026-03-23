@@ -1,7 +1,13 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import axios from "axios";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
+import api from "@/lib/api";
 import { GoogleButtonComponent } from "./GoogleButtonComponent";
 
 const pushMock = vi.fn();
@@ -19,15 +25,20 @@ vi.mock("@react-oauth/google", () => ({
   },
 }));
 
-vi.mock("axios", () => ({
+vi.mock("@/lib/api", () => ({
   default: {
     post: vi.fn(),
+    get: vi.fn(),
   },
 }));
+
+const mockedApi = vi.mocked(api, true);
 
 describe("GoogleButtonComponent", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockedApi.post.mockReset();
+    mockedApi.get.mockReset();
     onSuccessHandler = null;
     process.env.NEXT_PUBLIC_API = "http://api.test";
     sessionStorage.clear();
@@ -39,8 +50,7 @@ describe("GoogleButtonComponent", () => {
   });
 
   it("authenticates successfully and stores token", async () => {
-    const postMock = axios.post as unknown as ReturnType<typeof vi.fn>;
-    postMock.mockResolvedValue({
+    mockedApi.post.mockResolvedValue({
       data: {
         access_token: "access",
         refresh_token: "refresh",
@@ -51,6 +61,7 @@ describe("GoogleButtonComponent", () => {
       },
       status: 200,
     });
+    mockedApi.get.mockResolvedValue({ status: 200 });
 
     render(<GoogleButtonComponent />);
 
@@ -59,22 +70,23 @@ describe("GoogleButtonComponent", () => {
     expect(onSuccessHandler).toBeDefined();
 
     if (onSuccessHandler) {
-      await onSuccessHandler({ code: "auth-code" });
+      await act(async () => {
+        await onSuccessHandler?.({ code: "auth-code" });
+      });
     }
 
     await waitFor(() => {
-      expect(postMock).toHaveBeenCalledWith(
-        `${process.env.NEXT_PUBLIC_API}/users/authenticate/google`,
-        { code: "auth-code" },
+      expect(mockedApi.post).toHaveBeenCalledWith(
+        "/users/authenticate/google",
+        { code: "auth-code", env: "web" },
       );
-      expect(sessionStorage.getItem("google-token")).toBeTruthy();
+      expect(mockedApi.get).toHaveBeenCalledWith("/auth/me");
       expect(pushMock).toHaveBeenCalledWith("/location");
     });
   });
 
   it("shows error when request fails", async () => {
-    const postMock = axios.post as unknown as ReturnType<typeof vi.fn>;
-    postMock.mockRejectedValueOnce(new Error("fail"));
+    mockedApi.post.mockRejectedValueOnce(new Error("fail"));
     vi.spyOn(console, "error").mockImplementation(() => {});
 
     render(<GoogleButtonComponent />);
@@ -82,7 +94,9 @@ describe("GoogleButtonComponent", () => {
     fireEvent.click(screen.getByRole("button"));
 
     if (onSuccessHandler) {
-      await onSuccessHandler({ code: "auth-code" });
+      await act(async () => {
+        await onSuccessHandler?.({ code: "auth-code" });
+      });
     }
 
     await waitFor(() => {
@@ -100,7 +114,9 @@ describe("GoogleButtonComponent", () => {
     fireEvent.click(screen.getByRole("button"));
 
     if (onSuccessHandler) {
-      await onSuccessHandler({});
+      await act(async () => {
+        await onSuccessHandler?.({});
+      });
     }
 
     await waitFor(() => {
