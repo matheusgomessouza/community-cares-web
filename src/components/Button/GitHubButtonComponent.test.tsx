@@ -38,7 +38,7 @@ describe("Authorization component", () => {
 
   test("if the component render as expected", () => {
     render(<GitHubButtonComponent />);
-    expect(screen.getByRole("button")).toHaveTextContent("Github");
+    expect(screen.getByRole("button")).toHaveTextContent("GitHub");
   });
 
   test("shows config error if GitHub client id is missing", async () => {
