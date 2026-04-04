@@ -100,7 +100,7 @@ describe("Authorization component", () => {
       await screen.findByText(
         "Erro na autenticação. Verifique e tente novamente.",
       ),
-    );
+    ).toBeInTheDocument();
     expect(pushMock).not.toHaveBeenCalled();
 
     errorSpy.mockRestore();
