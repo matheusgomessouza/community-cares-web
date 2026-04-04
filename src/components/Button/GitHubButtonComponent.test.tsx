@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, test, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { GitHubButtonComponent } from "@/components/Button/GitHubButtonComponent";
+import api from "@/lib/api";
 
 // Mocks must be defined before importing the component under test
 const pushMock = vi.fn();
@@ -15,102 +16,93 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-// Mock axios with a default export and the post method we need
-vi.mock("axios", () => {
-  const mockPost = vi.fn();
-  return {
-    default: {
-      post: mockPost,
-    },
-    post: mockPost,
-  };
-});
+vi.mock("@/lib/api", () => ({
+  default: {
+    post: vi.fn(),
+    get: vi.fn(),
+  },
+}));
 
-// Get a reference to the mocked axios
-import axios from "axios";
-const mockedAxios = vi.mocked(axios, true);
+const mockedApi = vi.mocked(api, true);
 
 describe("Authorization component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockedAxios.post.mockReset();
+    mockedApi.post.mockReset();
+    mockedApi.get.mockReset();
     searchParams = new URLSearchParams();
-    process.env.NEXT_PUBLIC_CLIENT_ID = "client_123";
+    process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID = "github_client_123";
     process.env.NEXT_PUBLIC_API = "https://api.example.com";
     window.sessionStorage.clear();
   });
 
   test("if the component render as expected", () => {
     render(<GitHubButtonComponent />);
-    expect(screen.getByRole("button")).toHaveTextContent("Github");
+    expect(screen.getByRole("button")).toHaveTextContent("GitHub");
   });
 
-  test("navigates to GitHub OAuth on click", async () => {
+  test("shows config error if GitHub client id is missing", async () => {
+    delete process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
+    delete process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID_DEV;
+
     render(<GitHubButtonComponent />);
     const button = screen.getByRole("button");
 
-    // wait for initial authenticate effect to settle (it briefly toggles isAuthenticating)
     await waitFor(() => expect(button).not.toBeDisabled());
-
     await userEvent.click(button);
-    expect(pushMock).toHaveBeenCalledWith(
-      `https://github.com/login/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_CLIENT_ID_DEV}`,
-    );
+
+    expect(
+      await screen.findByText(
+        "Configuração de OAuth ausente. Contate o suporte.",
+      ),
+    ).toBeInTheDocument();
+    expect(pushMock).not.toHaveBeenCalled();
   });
 
   test("exchanges code for token and redirects on success", async () => {
     searchParams = new URLSearchParams("code=abc123");
 
-    // Set up the mock for axios.post
-    mockedAxios.post.mockResolvedValue({
+    mockedApi.post.mockResolvedValue({
       status: 200,
       data: { access_token: "token_456" },
     });
-
-    const setItemSpy = vi.spyOn(Storage.prototype, "setItem");
+    mockedApi.get.mockResolvedValue({ status: 200 });
 
     render(<GitHubButtonComponent />);
 
     await waitFor(() => {
-      expect(mockedAxios.post).toHaveBeenCalledWith(
-        `${process.env.NEXT_PUBLIC_API}/users/authenticate/github`,
-        { code: "abc123", env: "web" },
+      expect(mockedApi.post).toHaveBeenCalledWith(
+        "/users/authenticate/github",
+        expect.objectContaining({
+          code: "abc123",
+          env: "web",
+        }),
       );
     });
 
-    // Wait for the sessionStorage call
     await waitFor(() => {
-      expect(setItemSpy).toHaveBeenCalledWith("github-token", "token_456");
+      expect(mockedApi.get).toHaveBeenCalledWith("/auth/me");
     });
 
-    // Check that navigation happened
     expect(pushMock).toHaveBeenCalledWith("/location");
   });
 
   test("shows error message when authentication request fails", async () => {
     searchParams = new URLSearchParams("code=badcode");
 
-    // Set up the mock for axios.post to reject
-    mockedAxios.post.mockRejectedValue(new Error("network error"));
+    mockedApi.post.mockRejectedValue(new Error("network error"));
 
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    const setItemSpy = vi.spyOn(Storage.prototype, "setItem");
 
     render(<GitHubButtonComponent />);
 
     expect(
-      await screen.findByText("Error on the authentication request"),
+      await screen.findByText(
+        "Erro na autenticação. Verifique e tente novamente.",
+      ),
     ).toBeInTheDocument();
     expect(pushMock).not.toHaveBeenCalled();
-    expect(setItemSpy).not.toHaveBeenCalled();
 
     errorSpy.mockRestore();
-  });
-
-  test("shows loading state while authenticating with code", async () => {
-    // Skip this test for now, as the loading state behavior is already
-    // implicitly tested in other test cases
-    // This test was failing due to timing issues with the useState mock
-    expect(true).toBe(true);
   });
 });

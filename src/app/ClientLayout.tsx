@@ -29,7 +29,7 @@ export default function ClientLayout({
   const navLinks = [
     { name: "About", href: "/about" },
     { name: "How It Works", href: "/how-it-works" },
-    { name: "Testimonials", href: "#" },
+    { name: "Testimonials", href: "/testimonials" },
   ];
 
   const handleLogout = async () => {
@@ -83,7 +83,6 @@ export default function ClientLayout({
       mounted = false;
     };
   }, [pathname]);
-
 
   return (
     <>

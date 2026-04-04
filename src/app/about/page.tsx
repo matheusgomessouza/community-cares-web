@@ -124,7 +124,7 @@ export default function AboutPage() {
           <p className="font-paragraph text-lg sm:text-xl md:text-2xl leading-relaxed mb-8 text-white/90">
             We connect people in need with free food giveaway locations through
             an accessible, compassionate platform. Because everyone deserves a
-            helping hand. 🧡
+            helping hand.
           </p>
           <div
             className="inline-flex items-center gap-2 text-white/80 font-paragraph text-sm md:text-base"
@@ -303,7 +303,7 @@ export default function AboutPage() {
       </section>
 
       <section
-        className="py-16 px-4 sm:px-8 md:px-16 lg:px-24 bg-gradient-to-r from-orange to-darkOrange text-white"
+        className="py-16 px-4 sm:px-8 md:px-16 lg:px-24 bg-darkOrange text-white"
         aria-labelledby="cta-heading"
       >
         <div className="max-w-4xl mx-auto text-center">
@@ -320,7 +320,7 @@ export default function AboutPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <a
               href="/"
-              className="inline-block bg-white text-darkOrange font-paragraph font-semibold px-8 py-4 rounded-full hover:bg-orange/10 hover:text-white transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-white/50 shadow-lg"
+              className="inline-block bg-white text-darkOrange font-paragraph font-semibold px-8 py-4 rounded-full border-2 border-transparent hover:bg-orange/10 hover:border-white hover:text-white transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-white/50 shadow-lg"
               aria-label="Find food locations near you"
             >
               Find Food Locations
