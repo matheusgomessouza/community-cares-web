@@ -64,15 +64,17 @@ export default function TestimonialsPage() {
 
     if (!formData.name || !formData.role || !formData.message) return;
 
-    const newTestimonial: Testimonial = {
-      id: (testimonials.length + 1).toString(),
-      name: formData.name,
-      role: formData.role,
-      message: formData.message,
-      date: new Date().toISOString().split("T")[0],
-    };
+    setTestimonials((prev) => {
+      const newTestimonial: Testimonial = {
+        id: (prev.length + 1).toString(),
+        name: formData.name,
+        role: formData.role,
+        message: formData.message,
+        date: new Date().toISOString().split("T")[0],
+      };
 
-    setTestimonials((prev) => [newTestimonial, ...prev]);
+      return [newTestimonial, ...prev];
+    });
     setFormData({ name: "", role: "", message: "" });
     setIsModalOpen(false);
   };
