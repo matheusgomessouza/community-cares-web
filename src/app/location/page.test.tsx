@@ -167,12 +167,25 @@ describe('Location Page', () => {
 
       render(<Location />);
 
+      const coordinateInputs = screen
+        .getAllByRole('textbox')
+        .filter((input) => input.hasAttribute('readonly')) as HTMLInputElement[];
+
+      expect(coordinateInputs.length).toBeGreaterThanOrEqual(2);
+
+      const initialCoordinateValues = coordinateInputs.map((input) => input.value);
       const selectLocationButton = screen.getByTestId('select-location');
       fireEvent.click(selectLocationButton);
 
       await waitFor(() => {
-        // Coordinates should be set in the form
-        expect(selectLocationButton).toBeInTheDocument();
+        const updatedCoordinateValues = coordinateInputs.map((input) => input.value);
+
+        expect(updatedCoordinateValues).not.toEqual(initialCoordinateValues);
+        expect(
+          updatedCoordinateValues.some(
+            (value, index) => value !== initialCoordinateValues[index] && value !== ''
+          )
+        ).toBe(true);
       });
     });
 

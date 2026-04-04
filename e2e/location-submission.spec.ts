@@ -12,7 +12,7 @@ test.describe('Location Submission', () => {
       await expect(page.getByPlaceholder('Establishment name')).toBeVisible();
       await expect(page.locator('select[name="type"]')).toBeVisible();
       await expect(page.getByPlaceholder('Establishment address')).toBeVisible();
-      await expect(page.getByPlaceholder('Phone number')).toBeVisible();
+      await expect(page.getByPlaceholder('Enter phone number')).toBeVisible();
     });
 
     test('should display all establishment type options', async ({ page }) => {
@@ -42,8 +42,8 @@ test.describe('Location Submission', () => {
       const submitButton = page.getByRole('button', { name: /share/i });
       await submitButton.click();
 
-      await expect(page.locator('text=/name.*required/i')).toBeVisible();
-      await expect(page.locator('text=/type.*required/i')).toBeVisible();
+      await expect(page.getByText('Required field').first()).toBeVisible();
+      await expect(page.getByText('Please select a establishment type')).toBeVisible();
     });
   });
 

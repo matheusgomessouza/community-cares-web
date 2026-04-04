@@ -1,5 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import axios from 'axios';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 describe('API Client', () => {
   beforeEach(() => {
@@ -7,9 +6,13 @@ describe('API Client', () => {
     vi.resetModules();
   });
 
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it('should create axios instance with correct baseURL from environment variable', async () => {
     // Set environment variable
-    process.env.NEXT_PUBLIC_API = 'https://api.example.com';
+    vi.stubEnv('NEXT_PUBLIC_API', 'https://api.example.com');
     
     // Dynamically import to pick up env variable
     const { default: api } = await import('./api');
@@ -18,7 +21,7 @@ describe('API Client', () => {
   });
 
   it('should enable withCredentials for cookie support', async () => {
-    process.env.NEXT_PUBLIC_API = 'https://api.example.com';
+    vi.stubEnv('NEXT_PUBLIC_API', 'https://api.example.com');
     
     const { default: api } = await import('./api');
     
@@ -26,7 +29,7 @@ describe('API Client', () => {
   });
 
   it('should set timeout to 15000ms', async () => {
-    process.env.NEXT_PUBLIC_API = 'https://api.example.com';
+    vi.stubEnv('NEXT_PUBLIC_API', 'https://api.example.com');
     
     const { default: api } = await import('./api');
     
@@ -40,7 +43,7 @@ describe('API Client', () => {
     console.error = consoleErrorMock;
     
     // Clear environment variable
-    delete process.env.NEXT_PUBLIC_API;
+    vi.stubEnv('NEXT_PUBLIC_API', undefined as any);
     
     // Import api client (will trigger console.error)
     await import('./api');
@@ -54,7 +57,7 @@ describe('API Client', () => {
   });
 
   it('should create axios instance when NEXT_PUBLIC_API is undefined', async () => {
-    delete process.env.NEXT_PUBLIC_API;
+    vi.stubEnv('NEXT_PUBLIC_API', undefined as any);
     
     const { default: api } = await import('./api');
     
@@ -64,7 +67,7 @@ describe('API Client', () => {
   });
 
   it('should be an axios instance', async () => {
-    process.env.NEXT_PUBLIC_API = 'https://api.example.com';
+    vi.stubEnv('NEXT_PUBLIC_API', 'https://api.example.com');
     
     const { default: api } = await import('./api');
     
@@ -86,7 +89,7 @@ describe('API Client', () => {
 
     for (const baseURL of testCases) {
       vi.resetModules();
-      process.env.NEXT_PUBLIC_API = baseURL;
+      vi.stubEnv('NEXT_PUBLIC_API', baseURL);
       
       const { default: api } = await import('./api');
       
