@@ -2,12 +2,8 @@ import '@testing-library/jest-dom';
 import { beforeAll, afterAll } from 'vitest';
 import React from 'react';
 
-declare global {
-  var React: typeof import('react');
-}
-
-// Make React available globally for JSX
-globalThis.React = React;
+// Make React available globally for JSX without breaking TS global namespace
+(globalThis as any).React = React;
 
 // Store original console methods
 const originalError = console.error;
