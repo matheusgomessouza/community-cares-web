@@ -150,7 +150,7 @@ export function GitHubButtonComponent() {
           </>
         ) : (
           <>
-            <p className="font-semibold text-white">Github</p>
+            <p className="font-semibold text-white">GitHub</p>
             <IoLogoGithub size={24} fill="white" />
           </>
         )}

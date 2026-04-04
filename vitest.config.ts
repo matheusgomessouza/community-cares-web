@@ -9,6 +9,12 @@ export default defineConfig({
     typecheck: {
       tsconfig: "./tsconfig.json",
     },
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/e2e/**', // Exclude E2E tests from Vitest
+      '**/.{idea,git,cache,output,temp}/**',
+    ],
   },
   resolve: {
     alias: {
