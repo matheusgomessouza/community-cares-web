@@ -52,11 +52,14 @@ export default function TestimonialsPage() {
   });
 
   const openModalButtonRef = useRef<HTMLButtonElement>(null);
+  const previousIsModalOpenRef = useRef(isModalOpen);
 
   useEffect(() => {
-    if (!isModalOpen) {
+    if (previousIsModalOpenRef.current && !isModalOpen) {
       openModalButtonRef.current?.focus();
     }
+
+    previousIsModalOpenRef.current = isModalOpen;
   }, [isModalOpen]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
