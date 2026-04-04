@@ -3,7 +3,6 @@
 import { IoIosSend } from "react-icons/io";
 import { useEffect, useState, useRef } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer, toast } from "react-toastify";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { formatPhoneNumber } from "react-phone-number-input";
@@ -12,6 +11,7 @@ import api from "@/lib/api";
 import * as interfaces from "@/interfaces/index";
 import { InputTelephoneIntlComponent } from "@/components/InputTelephoneIntl/InputTelephoneIntlComponent";
 import { MapPickerComponent } from "@/components/MapPicker/MapPickerComponent";
+import Image from "next/image";
 
 export default function Location() {
   const imageRef = useRef<HTMLImageElement>(null);
@@ -440,7 +440,7 @@ export default function Location() {
             </label>
           ) : (
             <div className="relative mb-10 rounded-lg overflow-hidden border-2 border-orange">
-              <img
+              <Image
                 src={imagePreview}
                 alt="Preview"
                 className="w-full h-64 object-cover"
