@@ -51,6 +51,18 @@ export default function Location() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
+        toast.error("Please upload a valid PNG or JPG image.");
+        e.target.value = "";
+        return;
+      }
+      
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("Image size should be less than 10MB.");
+        e.target.value = "";
+        return;
+      }
+
       setValue("image", file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -69,7 +81,7 @@ export default function Location() {
     try {
       setIsLoading(true);
 
-      let image_url = null;
+      let image_url: string | null = null;
       if (data.image) {
         image_url = await storageService.uploadImage(data.image);
       }

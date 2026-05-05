@@ -6,8 +6,10 @@ export class MockStorageService implements IStorageService {
   async uploadImage(file: File): Promise<string> {
     // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log(`Mocking upload for file: ${file.name}`);
-    return `https://mock-storage.url/${encodeURIComponent(file.name)}`;
+    
+    // Generate a random ID to prevent leaking local filenames and avoid collisions
+    const randomId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
+    return `https://mock-storage.url/${randomId}`;
   }
 }
 
