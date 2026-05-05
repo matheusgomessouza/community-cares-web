@@ -12,6 +12,7 @@ import * as interfaces from "@/interfaces/index";
 import { InputTelephoneIntlComponent } from "@/components/InputTelephoneIntl/InputTelephoneIntlComponent";
 import { MapPickerComponent } from "@/components/MapPicker/MapPickerComponent";
 import Image from "next/image";
+import { storageService } from "@/services/StorageService";
 
 export default function Location() {
   const imageRef = useRef<HTMLImageElement>(null);
@@ -50,6 +51,18 @@ export default function Location() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
+        toast.error("Please upload a valid PNG or JPG image.");
+        e.target.value = "";
+        return;
+      }
+      
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("Image size should be less than 10MB.");
+        e.target.value = "";
+        return;
+      }
+
       setValue("image", file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -68,6 +81,11 @@ export default function Location() {
     try {
       setIsLoading(true);
 
+      let image_url: string | null = null;
+      if (data.image) {
+        image_url = await storageService.uploadImage(data.image);
+      }
+
       const response = await api.post(`/pending-locations`, {
         name: data.name,
         type: data.type,
@@ -76,6 +94,7 @@ export default function Location() {
           ? formatPhoneNumber(data.telephone)
           : data.telephone,
         coords: data.coords,
+        ...(image_url ? { image_url } : {}),
       });
       if (response.status === 200)
         toast.success("Location successfully shared! Thank you for helping 🤗");
@@ -431,7 +450,6 @@ export default function Location() {
               </span>
               <input
                 id="image-upload"
-                disabled
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
