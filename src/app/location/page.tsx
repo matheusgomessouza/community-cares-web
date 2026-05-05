@@ -12,6 +12,7 @@ import * as interfaces from "@/interfaces/index";
 import { InputTelephoneIntlComponent } from "@/components/InputTelephoneIntl/InputTelephoneIntlComponent";
 import { MapPickerComponent } from "@/components/MapPicker/MapPickerComponent";
 import Image from "next/image";
+import { storageService } from "@/services/StorageService";
 
 export default function Location() {
   const imageRef = useRef<HTMLImageElement>(null);
@@ -68,6 +69,11 @@ export default function Location() {
     try {
       setIsLoading(true);
 
+      let image_url = null;
+      if (data.image) {
+        image_url = await storageService.uploadImage(data.image);
+      }
+
       const response = await api.post(`/pending-locations`, {
         name: data.name,
         type: data.type,
@@ -76,6 +82,7 @@ export default function Location() {
           ? formatPhoneNumber(data.telephone)
           : data.telephone,
         coords: data.coords,
+        ...(image_url ? { image_url } : {}),
       });
       if (response.status === 200)
         toast.success("Location successfully shared! Thank you for helping 🤗");
@@ -431,7 +438,6 @@ export default function Location() {
               </span>
               <input
                 id="image-upload"
-                disabled
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
