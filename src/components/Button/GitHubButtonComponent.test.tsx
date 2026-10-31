@@ -79,6 +79,45 @@ describe("Authorization component", () => {
     expect(column).toHaveClass("flex-col");
   });
 
+  test("does not log the PKCE verifier or the tokens on failure", async () => {
+    searchParams = new URLSearchParams("code=abc123");
+    sessionStorage.setItem("github_code_verifier", "SECRET_VERIFIER");
+
+    const axiosError = Object.assign(
+      new Error("Request failed with status code 500"),
+      {
+        config: {
+          data: {
+            code: "abc123",
+            env: "web",
+            code_verifier: "SECRET_VERIFIER",
+          },
+        },
+        response: { data: { access_token: "SECRET_TOKEN" } },
+      },
+    );
+    mockedApi.post.mockRejectedValue(axiosError);
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    render(<GitHubButtonComponent />);
+
+    await waitFor(() => expect(mockedApi.post).toHaveBeenCalled());
+
+    const logged = spy.mock.calls
+      .flat()
+      .map((arg) => {
+        try {
+          return JSON.stringify(arg);
+        } catch {
+          return String(arg);
+        }
+      })
+      .join(" ");
+    expect(logged).not.toContain("SECRET_VERIFIER");
+    expect(logged).not.toContain("SECRET_TOKEN");
+    spy.mockRestore();
+  });
+
   test("exchanges code for token and redirects on success", async () => {
     searchParams = new URLSearchParams("code=abc123");
 

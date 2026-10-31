@@ -35,7 +35,12 @@ export function GoogleButtonComponent() {
         } catch (error) {
           setIsAuthenticating(false);
           setErrorOnRequest(true);
-          console.error("Unable to perform code exchage with server:", error);
+          // Log the message only. The axios error carries config.data, which
+          // holds the OAuth code, and response.data, which can hold tokens.
+          console.error(
+            "Unable to perform code exchange with server:",
+            error instanceof Error ? error.message : "unknown error",
+          );
         }
       } else {
         setIsAuthenticating(false);
