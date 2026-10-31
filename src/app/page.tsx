@@ -19,7 +19,7 @@ export default function Home() {
             Connect with your community through helping hands
           </span>
           <Suspense fallback={<Loading />}>
-            <div className="flex flex-col sm:flex-row gap-4 mt-6 w-full justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-4 mt-6 w-full justify-center items-stretch">
               <GitHubButtonComponent />
               <GoogleOAuthProvider
                 clientId={

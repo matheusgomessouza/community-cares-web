@@ -121,9 +121,9 @@ export function GitHubButtonComponent() {
   }, [authenticateWithGithub, params]);
 
   return (
-    <>
+    <div className="flex w-full min-w-0 flex-col items-center sm:flex-1">
       <button
-        className="rounded-xl gap-2 bg-darkOrange flex items-center justify-center p-4 w-64"
+        className="rounded-xl gap-2 bg-darkOrange flex items-center justify-center p-4 w-full"
         type="button"
         disabled={isAuthenticating}
         onClick={async () => {
@@ -157,8 +157,10 @@ export function GitHubButtonComponent() {
       </button>
 
       {errorOnRequest && (
-        <p className="text-red-600 font-bold mt-4">{errorOnRequest}</p>
+        <p className="text-red-600 font-bold mt-4 text-center text-sm">
+          {errorOnRequest}
+        </p>
       )}
-    </>
+    </div>
   );
 }
