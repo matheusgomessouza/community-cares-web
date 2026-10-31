@@ -42,4 +42,47 @@ test.describe('Authentication Flow', () => {
       }
     });
   });
+
+  test.describe('Login error layout', () => {
+    test('keeps the error below its button and inside the card', async ({ page }) => {
+      await page.route('**/users/authenticate/github', (route) =>
+        route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: '{}',
+        }),
+      );
+
+      await page.goto('/?code=fake');
+
+      const error = page.getByText(
+        'Erro na autenticação. Verifique e tente novamente.',
+      );
+      await expect(error).toBeVisible();
+
+      const card = page.locator('section');
+      const github = page.getByRole('button', { name: 'GitHub' });
+      const google = page.getByRole('button', { name: 'Google' });
+
+      const cardBox = (await card.boundingBox())!;
+      const githubBox = (await github.boundingBox())!;
+      const googleBox = (await google.boundingBox())!;
+      const errorBox = (await error.boundingBox())!;
+
+      // The error sits below the button, not beside it in the button row.
+      expect(errorBox.y).toBeGreaterThanOrEqual(
+        githubBox.y + githubBox.height,
+      );
+
+      // The error stays inside the card.
+      expect(errorBox.x).toBeGreaterThanOrEqual(cardBox.x);
+      expect(errorBox.x + errorBox.width).toBeLessThanOrEqual(
+        cardBox.x + cardBox.width,
+      );
+
+      // Both buttons keep a usable width instead of shrinking to a column.
+      expect(githubBox.width).toBeGreaterThan(150);
+      expect(googleBox.width).toBeGreaterThan(150);
+    });
+  });
 });
