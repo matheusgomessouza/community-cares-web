@@ -51,8 +51,12 @@ export default function Location() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
-        toast.error("Please upload a valid PNG or JPG image.");
+      if (
+        !["image/png", "image/jpeg", "image/jpg", "image/webp"].includes(
+          file.type,
+        )
+      ) {
+        toast.error("Please upload a valid PNG, JPG or WEBP image.");
         e.target.value = "";
         return;
       }
@@ -446,7 +450,7 @@ export default function Location() {
                 Click to upload image
               </span>
               <span className="text-gray text-sm mt-1">
-                PNG, JPG up to 10MB
+                PNG, JPG or WEBP up to 10MB
               </span>
               <input
                 id="image-upload"
@@ -457,11 +461,13 @@ export default function Location() {
               />
             </label>
           ) : (
-            <div className="relative mb-10 rounded-lg overflow-hidden border-2 border-orange">
+            <div className="relative mb-10 h-64 rounded-lg overflow-hidden border-2 border-orange">
               <Image
                 src={imagePreview}
                 alt="Preview"
-                className="w-full h-64 object-cover"
+                fill
+                sizes="(max-width: 768px) 100vw, 640px"
+                className="object-cover"
               />
               <button
                 type="button"

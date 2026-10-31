@@ -398,6 +398,45 @@ describe('Location Page', () => {
     });
   });
 
+  describe('Image format', () => {
+    it('accepts a WEBP image and shows the preview', async () => {
+      vi.mocked(api.get).mockResolvedValue({ data: { name: 'Test User' } });
+      const { toast } = await import('react-toastify');
+      const { container } = render(<Location />);
+
+      const file = new File(['image'], 'photo.webp', { type: 'image/webp' });
+      const input = container.querySelector(
+        '#image-upload'
+      ) as HTMLInputElement;
+
+      fireEvent.change(input, { target: { files: [file] } });
+
+      await waitFor(() => {
+        expect(screen.getByAltText('Preview')).toBeInTheDocument();
+      });
+      expect(toast.error).not.toHaveBeenCalled();
+    });
+
+    it('rejects a GIF with a clear message', async () => {
+      vi.mocked(api.get).mockResolvedValue({ data: { name: 'Test User' } });
+      const { toast } = await import('react-toastify');
+      const { container } = render(<Location />);
+
+      const file = new File(['image'], 'photo.gif', { type: 'image/gif' });
+      const input = container.querySelector(
+        '#image-upload'
+      ) as HTMLInputElement;
+
+      fireEvent.change(input, { target: { files: [file] } });
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(
+          'Please upload a valid PNG, JPG or WEBP image.'
+        );
+      });
+    });
+  });
+
   describe('Accessibility', () => {
     it('should have proper ARIA labels and semantic HTML', () => {
       vi.mocked(api.get).mockResolvedValue({ data: { name: 'Test User' } });
