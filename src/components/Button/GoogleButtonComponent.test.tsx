@@ -127,4 +127,65 @@ describe("GoogleButtonComponent", () => {
       ).toBeInTheDocument();
     });
   });
+
+  it("keeps the error inside the button column", async () => {
+    render(<GoogleButtonComponent />);
+    const button = screen.getByRole("button");
+
+    fireEvent.click(button);
+
+    if (onSuccessHandler) {
+      await act(async () => {
+        await onSuccessHandler?.({});
+      });
+    }
+
+    const error = await screen.findByText(
+      "Error on the authentication request, please try again.",
+    );
+
+    // The error must share the button column. As a sibling in the button row,
+    // the error took a third column and squeezed the buttons.
+    const column = button.parentElement;
+    expect(column).toBe(error.parentElement);
+    expect(column).toHaveClass("flex-col");
+  });
+
+  it("does not log the OAuth code or the tokens on failure", async () => {
+    const axiosError = Object.assign(
+      new Error("Request failed with status code 500"),
+      {
+        config: { data: { code: "SECRET_CODE", env: "web" } },
+        response: { data: { access_token: "SECRET_TOKEN" } },
+      },
+    );
+    mockedApi.post.mockRejectedValueOnce(axiosError);
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    render(<GoogleButtonComponent />);
+
+    fireEvent.click(screen.getByRole("button"));
+
+    if (onSuccessHandler) {
+      await act(async () => {
+        await onSuccessHandler?.({ code: "SECRET_CODE" });
+      });
+    }
+
+    await waitFor(() => expect(mockedApi.post).toHaveBeenCalled());
+
+    const logged = spy.mock.calls
+      .flat()
+      .map((arg) => {
+        try {
+          return JSON.stringify(arg);
+        } catch {
+          return String(arg);
+        }
+      })
+      .join(" ");
+    expect(logged).not.toContain("SECRET_CODE");
+    expect(logged).not.toContain("SECRET_TOKEN");
+    spy.mockRestore();
+  });
 });

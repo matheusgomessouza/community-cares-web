@@ -97,14 +97,16 @@ export function GitHubButtonComponent() {
       } else {
         console.error(
           "Unexpected response from /users/authenticate/github",
-          response,
+          response.status,
         );
         setErrorOnRequest("Falha na autenticação. Tente novamente.");
       }
     } catch (error) {
+      // Log the message only. The axios error carries config.data, which holds
+      // the PKCE code_verifier, and response.data, which can hold tokens.
       console.error(
         "Unable to retrieve access_token from Community Cares Server [authenticateWithGithub]",
-        error,
+        error instanceof Error ? error.message : "unknown error",
       );
       setErrorOnRequest("Erro na autenticação. Verifique e tente novamente.");
     } finally {
@@ -121,9 +123,9 @@ export function GitHubButtonComponent() {
   }, [authenticateWithGithub, params]);
 
   return (
-    <>
+    <div className="flex w-full min-w-0 flex-col items-center sm:flex-1">
       <button
-        className="rounded-xl gap-2 bg-darkOrange flex items-center justify-center p-4 w-64"
+        className="rounded-xl gap-2 bg-darkOrange flex items-center justify-center p-4 w-full"
         type="button"
         disabled={isAuthenticating}
         onClick={async () => {
@@ -157,8 +159,10 @@ export function GitHubButtonComponent() {
       </button>
 
       {errorOnRequest && (
-        <p className="text-red-600 font-bold mt-4">{errorOnRequest}</p>
+        <p className="text-red-600 font-bold mt-4 text-center text-sm">
+          {errorOnRequest}
+        </p>
       )}
-    </>
+    </div>
   );
 }
