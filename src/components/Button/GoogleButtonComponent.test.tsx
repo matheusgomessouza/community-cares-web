@@ -127,4 +127,27 @@ describe("GoogleButtonComponent", () => {
       ).toBeInTheDocument();
     });
   });
+
+  it("keeps the error inside the button column", async () => {
+    render(<GoogleButtonComponent />);
+    const button = screen.getByRole("button");
+
+    fireEvent.click(button);
+
+    if (onSuccessHandler) {
+      await act(async () => {
+        await onSuccessHandler?.({});
+      });
+    }
+
+    const error = await screen.findByText(
+      "Error on the authentication request, please try again.",
+    );
+
+    // The error must share the button column. As a sibling in the button row,
+    // the error took a third column and squeezed the buttons.
+    const column = button.parentElement;
+    expect(column).toBe(error.parentElement);
+    expect(column).toHaveClass("flex-col");
+  });
 });

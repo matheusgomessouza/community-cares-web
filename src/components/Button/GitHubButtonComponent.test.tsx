@@ -59,6 +59,26 @@ describe("Authorization component", () => {
     expect(pushMock).not.toHaveBeenCalled();
   });
 
+  test("keeps the error inside the button column", async () => {
+    delete process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
+    delete process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID_DEV;
+
+    render(<GitHubButtonComponent />);
+    const button = screen.getByRole("button");
+
+    await userEvent.click(button);
+
+    const error = await screen.findByText(
+      "Configuração de OAuth ausente. Contate o suporte.",
+    );
+
+    // The error must share the button column. As a sibling in the button row,
+    // the error took a third column and squeezed the buttons.
+    const column = button.parentElement;
+    expect(column).toBe(error.parentElement);
+    expect(column).toHaveClass("flex-col");
+  });
+
   test("exchanges code for token and redirects on success", async () => {
     searchParams = new URLSearchParams("code=abc123");
 
