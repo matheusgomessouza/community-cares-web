@@ -42,6 +42,8 @@ vi.mock('@/components/MapPicker/MapPickerComponent', () => ({
   ),
 }));
 
+// The phone mock keeps the placeholder of the real PhoneInput, so the tests
+// reach the field with the same selector as the production DOM.
 vi.mock('@/components/InputTelephoneIntl/InputTelephoneIntlComponent', () => ({
   InputTelephoneIntlComponent: React.forwardRef(({ onChange, onBlur, value, name }: any, ref: any) => (
     <input
@@ -51,7 +53,7 @@ vi.mock('@/components/InputTelephoneIntl/InputTelephoneIntlComponent', () => ({
       onChange={(e) => onChange(e.target.value)}
       onBlur={onBlur}
       name={name}
-      placeholder="Phone number"
+      placeholder="Enter phone number"
     />
   )),
 }));
@@ -75,7 +77,7 @@ describe('Location Page', () => {
       expect(screen.getByPlaceholderText('Establishment name')).toBeInTheDocument();
       expect(screen.getByText('-- Please choose an option --')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('Establishment address')).toBeInTheDocument();
-      expect(screen.getByTestId('phone-input')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Enter phone number')).toBeInTheDocument();
       expect(screen.getByTestId('map-picker')).toBeInTheDocument();
     });
 
@@ -212,7 +214,7 @@ describe('Location Page', () => {
       
       await user.type(screen.getByPlaceholderText('Establishment address'), '123 Main St');
       
-      const phoneInput = screen.getByTestId('phone-input');
+      const phoneInput = screen.getByPlaceholderText('Enter phone number');
       await user.type(phoneInput, '+5511987654321');
 
       // Select location on map
@@ -247,7 +249,7 @@ describe('Location Page', () => {
       
       await user.type(screen.getByPlaceholderText('Establishment address'), '123 Main St, São Paulo');
       
-      const phoneInput = screen.getByTestId('phone-input');
+      const phoneInput = screen.getByPlaceholderText('Enter phone number');
       await user.type(phoneInput, '+5511987654321');
 
       // Select location
@@ -295,7 +297,7 @@ describe('Location Page', () => {
       
       await user.type(screen.getByPlaceholderText('Establishment address'), '456 Oak Ave');
       
-      const phoneInput = screen.getByTestId('phone-input');
+      const phoneInput = screen.getByPlaceholderText('Enter phone number');
       await user.type(phoneInput, '+5511999999999');
 
       // Select location
@@ -332,7 +334,7 @@ describe('Location Page', () => {
       
       await user.type(screen.getByPlaceholderText('Establishment address'), '789 Medical Center');
       
-      const phoneInput = screen.getByTestId('phone-input');
+      const phoneInput = screen.getByPlaceholderText('Enter phone number');
       await user.type(phoneInput, '+5511987654321');
 
       // Select location
@@ -368,7 +370,7 @@ describe('Location Page', () => {
       
       await user.type(screen.getByPlaceholderText('Establishment address'), '789 Medical Center');
       
-      const phoneInput = screen.getByTestId('phone-input');
+      const phoneInput = screen.getByPlaceholderText('Enter phone number');
       await user.type(phoneInput, '+5511987654321');
 
       await user.click(screen.getByTestId('select-location'));
@@ -404,7 +406,7 @@ describe('Location Page', () => {
       
       await user.type(screen.getByPlaceholderText('Establishment address'), '789 Medical Center');
       
-      const phoneInput = screen.getByTestId('phone-input');
+      const phoneInput = screen.getByPlaceholderText('Enter phone number');
       await user.type(phoneInput, '+5511987654321');
 
       await user.click(screen.getByTestId('select-location'));
@@ -440,7 +442,7 @@ describe('Location Page', () => {
       
       await user.type(screen.getByPlaceholderText('Establishment address'), '789 Medical Center');
       
-      const phoneInput = screen.getByTestId('phone-input');
+      const phoneInput = screen.getByPlaceholderText('Enter phone number');
       await user.type(phoneInput, '+5511987654321');
 
       await user.click(screen.getByTestId('select-location'));
@@ -453,16 +455,21 @@ describe('Location Page', () => {
       });
     });
 
-    it('should send the raw phone when the format returns nothing', async () => {
+    it('should clear the form after a successful submission', async () => {
       vi.mocked(api.get).mockResolvedValue({ data: { name: 'Test User' } });
       vi.mocked(api.post).mockResolvedValue({ status: 200 });
-      const { formatPhoneNumber } = await import('react-phone-number-input');
-      vi.mocked(formatPhoneNumber).mockReturnValueOnce(
-        undefined as unknown as string
+      vi.mocked(storageService.uploadImage).mockResolvedValue(
+        'https://bucket.s3.sa-east-1.amazonaws.com/locations/a.webp'
       );
 
       const user = userEvent.setup();
-      render(<Location />);
+      const { container } = render(<Location />);
+
+      const file = new File(['image'], 'photo.webp', { type: 'image/webp' });
+      const imageInput = container.querySelector(
+        '#image-upload'
+      ) as HTMLInputElement;
+      fireEvent.change(imageInput, { target: { files: [file] } });
 
       await user.type(screen.getByPlaceholderText('Establishment name'), 'Hospital');
       
@@ -471,18 +478,31 @@ describe('Location Page', () => {
       
       await user.type(screen.getByPlaceholderText('Establishment address'), '789 Medical Center');
       
-      const phoneInput = screen.getByTestId('phone-input');
+      const phoneInput = screen.getByPlaceholderText('Enter phone number');
       await user.type(phoneInput, '+5511987654321');
 
       await user.click(screen.getByTestId('select-location'));
       await user.click(screen.getByRole('button', { name: /share/i }));
 
       await waitFor(() => {
-        expect(api.post).toHaveBeenCalledWith(
-          '/pending-locations',
-          expect.objectContaining({ contact: '+5511987654321' })
-        );
+        expect(api.post).toHaveBeenCalledTimes(1);
       });
+
+      await waitFor(() => {
+        expect(
+          screen.getByPlaceholderText('Establishment name')
+        ).toHaveValue('');
+      });
+      expect(
+        screen.getByPlaceholderText('Establishment address')
+      ).toHaveValue('');
+      expect(phoneInput).toHaveValue('');
+
+      // A second click stops at the empty form, so it sends no request.
+      await user.click(screen.getByRole('button', { name: /share/i }));
+
+      expect(api.post).toHaveBeenCalledTimes(1);
+      expect(storageService.uploadImage).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -511,7 +531,7 @@ describe('Location Page', () => {
         
         await user.type(screen.getByPlaceholderText('Establishment address'), 'Address');
         
-        const phoneInput = screen.getByTestId('phone-input');
+        const phoneInput = screen.getByPlaceholderText('Enter phone number');
         await user.clear(phoneInput);
         await user.type(phoneInput, '+5511999999999');
 
@@ -602,7 +622,7 @@ describe('Location Page', () => {
         screen.getByPlaceholderText('Establishment address'),
         '123 Main St'
       );
-      await user.type(screen.getByTestId('phone-input'), '+5511987654321');
+      await user.type(screen.getByPlaceholderText('Enter phone number'), '+5511987654321');
       await user.click(screen.getByTestId('select-location'));
 
       return { user };

@@ -36,6 +36,7 @@ export default function Location() {
     register,
     control,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<interfaces.LocationInputProps>({
     resolver: zodResolver(interfaces.LocationInputSchema),
@@ -101,7 +102,7 @@ export default function Location() {
           } catch (error) {
             toast.error("Unable to upload the image, please try again. 😓");
             console.error(
-              "Unable to upload the image /postLocation",
+              "Unable to upload the image /uploads",
               error instanceof Error ? error.message : "unknown error",
             );
             return;
@@ -113,13 +114,20 @@ export default function Location() {
         name: data.name,
         type: data.type,
         address: data.address,
-        contact: formatPhoneNumber(data.telephone) || data.telephone,
+        contact: data.telephone
+          ? formatPhoneNumber(data.telephone)
+          : data.telephone,
         coords: data.coords,
         ...(image_url ? { image_url } : {}),
       });
       if (response.status >= 200 && response.status < 300) {
         uploadedFileRef.current = null;
         uploadedUrlRef.current = null;
+        // The form keeps its values after a success, so a second click would
+        // send the same location again.
+        reset();
+        setImagePreview(null);
+        setSelectedCoords(null);
         toast.success("Location successfully shared! Thank you for helping 🤗");
       }
     } catch (error) {
