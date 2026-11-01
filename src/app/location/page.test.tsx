@@ -348,9 +348,141 @@ describe('Location Page', () => {
       });
     });
 
-    it.skip('should show loading state during submission', async () => {
-      // Skip this test as the button selector is inconsistent
-      // The loading state logic works but is difficult to test reliably
+    it('should disable the share button while the request runs', async () => {
+      vi.mocked(api.get).mockResolvedValue({ data: { name: 'Test User' } });
+      let finishRequest: (value: any) => void = () => {};
+      vi.mocked(api.post).mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            finishRequest = resolve;
+          })
+      );
+
+      const user = userEvent.setup();
+      render(<Location />);
+
+      await user.type(screen.getByPlaceholderText('Establishment name'), 'Hospital');
+      
+      const typeSelect = screen.getByRole('combobox');
+      await user.selectOptions(typeSelect, 'hospital');
+      
+      await user.type(screen.getByPlaceholderText('Establishment address'), '789 Medical Center');
+      
+      const phoneInput = screen.getByTestId('phone-input');
+      await user.type(phoneInput, '+5511987654321');
+
+      await user.click(screen.getByTestId('select-location'));
+
+      const submitButton = screen.getByRole('button', { name: /share/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(submitButton).toBeDisabled();
+      });
+
+      finishRequest({ status: 200 });
+
+      await waitFor(() => {
+        expect(submitButton).toBeEnabled();
+      });
+    });
+
+    it('should log the error message without the request body', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.mocked(api.get).mockResolvedValue({ data: { name: 'Test User' } });
+      vi.mocked(api.post).mockRejectedValue(
+        new Error('Request failed with status code 400')
+      );
+
+      const user = userEvent.setup();
+      render(<Location />);
+
+      await user.type(screen.getByPlaceholderText('Establishment name'), 'Hospital');
+      
+      const typeSelect = screen.getByRole('combobox');
+      await user.selectOptions(typeSelect, 'hospital');
+      
+      await user.type(screen.getByPlaceholderText('Establishment address'), '789 Medical Center');
+      
+      const phoneInput = screen.getByTestId('phone-input');
+      await user.type(phoneInput, '+5511987654321');
+
+      await user.click(screen.getByTestId('select-location'));
+      await user.click(screen.getByRole('button', { name: /share/i }));
+
+      await waitFor(() => {
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          'Unable to post new location /postLocation',
+          'Request failed with status code 400'
+        );
+      });
+
+      const logged = consoleErrorSpy.mock.calls.find(
+        (call) => call[0] === 'Unable to post new location /postLocation'
+      );
+      expect(logged?.[1]).toBeTypeOf('string');
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should show the success message when the API answers 201', async () => {
+      vi.mocked(api.get).mockResolvedValue({ data: { name: 'Test User' } });
+      vi.mocked(api.post).mockResolvedValue({ status: 201 });
+      const { toast } = await import('react-toastify');
+
+      const user = userEvent.setup();
+      render(<Location />);
+
+      await user.type(screen.getByPlaceholderText('Establishment name'), 'Hospital');
+      
+      const typeSelect = screen.getByRole('combobox');
+      await user.selectOptions(typeSelect, 'hospital');
+      
+      await user.type(screen.getByPlaceholderText('Establishment address'), '789 Medical Center');
+      
+      const phoneInput = screen.getByTestId('phone-input');
+      await user.type(phoneInput, '+5511987654321');
+
+      await user.click(screen.getByTestId('select-location'));
+      await user.click(screen.getByRole('button', { name: /share/i }));
+
+      await waitFor(() => {
+        expect(toast.success).toHaveBeenCalledWith(
+          'Location successfully shared! Thank you for helping 🤗'
+        );
+      });
+    });
+
+    it('should send the raw phone when the format returns nothing', async () => {
+      vi.mocked(api.get).mockResolvedValue({ data: { name: 'Test User' } });
+      vi.mocked(api.post).mockResolvedValue({ status: 200 });
+      const { formatPhoneNumber } = await import('react-phone-number-input');
+      vi.mocked(formatPhoneNumber).mockReturnValueOnce(
+        undefined as unknown as string
+      );
+
+      const user = userEvent.setup();
+      render(<Location />);
+
+      await user.type(screen.getByPlaceholderText('Establishment name'), 'Hospital');
+      
+      const typeSelect = screen.getByRole('combobox');
+      await user.selectOptions(typeSelect, 'hospital');
+      
+      await user.type(screen.getByPlaceholderText('Establishment address'), '789 Medical Center');
+      
+      const phoneInput = screen.getByTestId('phone-input');
+      await user.type(phoneInput, '+5511987654321');
+
+      await user.click(screen.getByTestId('select-location'));
+      await user.click(screen.getByRole('button', { name: /share/i }));
+
+      await waitFor(() => {
+        expect(api.post).toHaveBeenCalledWith(
+          '/pending-locations',
+          expect.objectContaining({ contact: '+5511987654321' })
+        );
+      });
     });
   });
 

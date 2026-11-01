@@ -100,7 +100,10 @@ export default function Location() {
             uploadedUrlRef.current = image_url;
           } catch (error) {
             toast.error("Unable to upload the image, please try again. 😓");
-            console.error("Unable to upload the image /postLocation", error);
+            console.error(
+              "Unable to upload the image /postLocation",
+              error instanceof Error ? error.message : "unknown error",
+            );
             return;
           }
         }
@@ -110,20 +113,22 @@ export default function Location() {
         name: data.name,
         type: data.type,
         address: data.address,
-        contact: data.telephone
-          ? formatPhoneNumber(data.telephone)
-          : data.telephone,
+        contact: formatPhoneNumber(data.telephone) || data.telephone,
         coords: data.coords,
         ...(image_url ? { image_url } : {}),
       });
-      if (response.status === 200) {
+      if (response.status >= 200 && response.status < 300) {
         uploadedFileRef.current = null;
         uploadedUrlRef.current = null;
         toast.success("Location successfully shared! Thank you for helping 🤗");
       }
     } catch (error) {
       toast.error("Unable to share location, please try again. 😓");
-      console.error("Unable to post new location /postLocation", error);
+      // The error object carries the request body, so log the message only.
+      console.error(
+        "Unable to post new location /postLocation",
+        error instanceof Error ? error.message : "unknown error",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -510,7 +515,8 @@ export default function Location() {
 
           <button
             type="submit"
-            className="bg-darkOrange rounded-lg px-4 h-12 w-full flex items-center justify-center gap-2 mt-5"
+            disabled={isLoading}
+            className="bg-darkOrange rounded-lg px-4 h-12 w-full flex items-center justify-center gap-2 mt-5 disabled:opacity-70"
           >
             {isLoading ? (
               <section className="flex gap-2 items-center justify-center">
