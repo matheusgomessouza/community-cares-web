@@ -5,9 +5,14 @@ import '@testing-library/jest-dom';
 import React from 'react';
 import Location from './page';
 import api from '@/lib/api';
+import { storageService } from '@/services/StorageService';
 
 // Mock dependencies
 vi.mock('@/lib/api');
+
+vi.mock('@/services/StorageService', () => ({
+  storageService: { uploadImage: vi.fn() },
+}));
 
 vi.mock('react-toastify', () => ({
   ToastContainer: () => <div data-testid="toast-container" />,
@@ -24,7 +29,10 @@ vi.mock('react-phone-number-input', () => ({
 vi.mock('@/components/MapPicker/MapPickerComponent', () => ({
   MapPickerComponent: ({ onLocationSelect }: any) => (
     <div data-testid="map-picker">
+      {/* type="button" keeps this control from submitting the form. The real
+          MapPicker renders no button at all. */}
       <button
+        type="button"
         onClick={() => onLocationSelect(-23.5505, -46.6333)}
         data-testid="select-location"
       >
@@ -434,6 +442,106 @@ describe('Location Page', () => {
           'Please upload a valid PNG, JPG or WEBP image.'
         );
       });
+    });
+  });
+
+  describe('Image upload on submit', () => {
+    const webpFile = new File(['image'], 'photo.webp', { type: 'image/webp' });
+    const imageUrl =
+      'https://bucket.s3.sa-east-1.amazonaws.com/locations/a.webp';
+
+    async function fillFormWithImage() {
+      vi.mocked(api.get).mockResolvedValue({ data: { name: 'Test User' } });
+
+      const user = userEvent.setup();
+      const { container } = render(<Location />);
+
+      const input = container.querySelector(
+        '#image-upload'
+      ) as HTMLInputElement;
+      fireEvent.change(input, { target: { files: [webpFile] } });
+
+      await user.type(
+        screen.getByPlaceholderText('Establishment name'),
+        'Community Kitchen'
+      );
+      await user.selectOptions(screen.getByRole('combobox'), 'community-kitchen');
+      await user.type(
+        screen.getByPlaceholderText('Establishment address'),
+        '123 Main St'
+      );
+      await user.type(screen.getByTestId('phone-input'), '+5511987654321');
+      await user.click(screen.getByTestId('select-location'));
+
+      return { user };
+    }
+
+    const shareButton = () => screen.getByRole('button', { name: /share/i });
+
+    it('uploads the image and sends its URL to the API', async () => {
+      vi.mocked(api.post).mockResolvedValue({ status: 200 });
+      vi.mocked(storageService.uploadImage).mockResolvedValue(imageUrl);
+
+      const { user } = await fillFormWithImage();
+      await user.click(shareButton());
+
+      await waitFor(() => {
+        expect(storageService.uploadImage).toHaveBeenCalledWith(webpFile);
+      });
+      await waitFor(() => {
+        expect(api.post).toHaveBeenCalledWith(
+          '/pending-locations',
+          expect.objectContaining({ image_url: imageUrl })
+        );
+      });
+    });
+
+    it('shows the upload message and stops when the upload fails', async () => {
+      const { toast } = await import('react-toastify');
+      vi.mocked(storageService.uploadImage).mockRejectedValue(
+        new Error('timeout exceeded')
+      );
+
+      const { user } = await fillFormWithImage();
+      await user.click(shareButton());
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(
+          'Unable to upload the image, please try again. 😓'
+        );
+      });
+      expect(api.post).not.toHaveBeenCalledWith(
+        '/pending-locations',
+        expect.anything()
+      );
+    });
+
+    it('reuses the uploaded URL when the user submits again', async () => {
+      vi.mocked(storageService.uploadImage).mockResolvedValue(imageUrl);
+      vi.mocked(api.post)
+        .mockResolvedValueOnce({ status: 500 })
+        .mockResolvedValueOnce({ status: 200 });
+
+      const { user } = await fillFormWithImage();
+      await user.click(shareButton());
+
+      await waitFor(() => {
+        expect(api.post).toHaveBeenCalledTimes(1);
+      });
+
+      await waitFor(() => {
+        expect(shareButton()).toBeEnabled();
+      });
+      await user.click(shareButton());
+
+      await waitFor(() => {
+        expect(api.post).toHaveBeenCalledTimes(2);
+      });
+      expect(storageService.uploadImage).toHaveBeenCalledTimes(1);
+      expect(api.post).toHaveBeenLastCalledWith(
+        '/pending-locations',
+        expect.objectContaining({ image_url: imageUrl })
+      );
     });
   });
 

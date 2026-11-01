@@ -16,6 +16,8 @@ import { storageService } from "@/services/StorageService";
 
 export default function Location() {
   const imageRef = useRef<HTMLImageElement>(null);
+  const uploadedFileRef = useRef<File | null>(null);
+  const uploadedUrlRef = useRef<string | null>(null);
   const [userData, setUserData] = useState<{
     name: string;
     avatar_url: string;
@@ -87,7 +89,21 @@ export default function Location() {
 
       let image_url: string | null = null;
       if (data.image) {
-        image_url = await storageService.uploadImage(data.image);
+        // A retry with the same file reuses the stored URL. The API has no
+        // delete for uploads, so a second upload would duplicate the object.
+        if (uploadedFileRef.current === data.image) {
+          image_url = uploadedUrlRef.current;
+        } else {
+          try {
+            image_url = await storageService.uploadImage(data.image);
+            uploadedFileRef.current = data.image;
+            uploadedUrlRef.current = image_url;
+          } catch (error) {
+            toast.error("Unable to upload the image, please try again. 😓");
+            console.error("Unable to upload the image /postLocation", error);
+            return;
+          }
+        }
       }
 
       const response = await api.post(`/pending-locations`, {
@@ -100,12 +116,14 @@ export default function Location() {
         coords: data.coords,
         ...(image_url ? { image_url } : {}),
       });
-      if (response.status === 200)
+      if (response.status === 200) {
+        uploadedFileRef.current = null;
+        uploadedUrlRef.current = null;
         toast.success("Location successfully shared! Thank you for helping 🤗");
+      }
     } catch (error) {
-      setIsLoading(false);
       toast.error("Unable to share location, please try again. 😓");
-      console.error("Unable to post new location /postLocation");
+      console.error("Unable to post new location /postLocation", error);
     } finally {
       setIsLoading(false);
     }
