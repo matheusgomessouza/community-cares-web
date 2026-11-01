@@ -16,6 +16,8 @@ import { storageService } from "@/services/StorageService";
 
 export default function Location() {
   const imageRef = useRef<HTMLImageElement>(null);
+  const uploadedFileRef = useRef<File | null>(null);
+  const uploadedUrlRef = useRef<string | null>(null);
   const [userData, setUserData] = useState<{
     name: string;
     avatar_url: string;
@@ -34,6 +36,7 @@ export default function Location() {
     register,
     control,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<interfaces.LocationInputProps>({
     resolver: zodResolver(interfaces.LocationInputSchema),
@@ -51,8 +54,12 @@ export default function Location() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
-        toast.error("Please upload a valid PNG or JPG image.");
+      if (
+        !["image/png", "image/jpeg", "image/jpg", "image/webp"].includes(
+          file.type,
+        )
+      ) {
+        toast.error("Please upload a valid PNG, JPG or WEBP image.");
         e.target.value = "";
         return;
       }
@@ -83,7 +90,24 @@ export default function Location() {
 
       let image_url: string | null = null;
       if (data.image) {
-        image_url = await storageService.uploadImage(data.image);
+        // A retry with the same file reuses the stored URL. The API has no
+        // delete for uploads, so a second upload would duplicate the object.
+        if (uploadedFileRef.current === data.image) {
+          image_url = uploadedUrlRef.current;
+        } else {
+          try {
+            image_url = await storageService.uploadImage(data.image);
+            uploadedFileRef.current = data.image;
+            uploadedUrlRef.current = image_url;
+          } catch (error) {
+            toast.error("Unable to upload the image, please try again. 😓");
+            console.error(
+              "Unable to upload the image /uploads",
+              error instanceof Error ? error.message : "unknown error",
+            );
+            return;
+          }
+        }
       }
 
       const response = await api.post(`/pending-locations`, {
@@ -96,12 +120,23 @@ export default function Location() {
         coords: data.coords,
         ...(image_url ? { image_url } : {}),
       });
-      if (response.status === 200)
+      if (response.status >= 200 && response.status < 300) {
+        uploadedFileRef.current = null;
+        uploadedUrlRef.current = null;
+        // The form keeps its values after a success, so a second click would
+        // send the same location again.
+        reset();
+        setImagePreview(null);
+        setSelectedCoords(null);
         toast.success("Location successfully shared! Thank you for helping 🤗");
+      }
     } catch (error) {
-      setIsLoading(false);
       toast.error("Unable to share location, please try again. 😓");
-      console.error("Unable to post new location /postLocation");
+      // The error object carries the request body, so log the message only.
+      console.error(
+        "Unable to post new location /postLocation",
+        error instanceof Error ? error.message : "unknown error",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -446,7 +481,7 @@ export default function Location() {
                 Click to upload image
               </span>
               <span className="text-gray text-sm mt-1">
-                PNG, JPG up to 10MB
+                PNG, JPG or WEBP up to 10MB
               </span>
               <input
                 id="image-upload"
@@ -457,11 +492,13 @@ export default function Location() {
               />
             </label>
           ) : (
-            <div className="relative mb-10 rounded-lg overflow-hidden border-2 border-orange">
+            <div className="relative mb-10 h-64 rounded-lg overflow-hidden border-2 border-orange">
               <Image
                 src={imagePreview}
                 alt="Preview"
-                className="w-full h-64 object-cover"
+                fill
+                sizes="(max-width: 768px) 100vw, 640px"
+                className="object-cover"
               />
               <button
                 type="button"
@@ -486,7 +523,8 @@ export default function Location() {
 
           <button
             type="submit"
-            className="bg-darkOrange rounded-lg px-4 h-12 w-full flex items-center justify-center gap-2 mt-5"
+            disabled={isLoading}
+            className="bg-darkOrange rounded-lg px-4 h-12 w-full flex items-center justify-center gap-2 mt-5 disabled:opacity-70"
           >
             {isLoading ? (
               <section className="flex gap-2 items-center justify-center">

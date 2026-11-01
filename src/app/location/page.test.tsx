@@ -5,9 +5,14 @@ import '@testing-library/jest-dom';
 import React from 'react';
 import Location from './page';
 import api from '@/lib/api';
+import { storageService } from '@/services/StorageService';
 
 // Mock dependencies
 vi.mock('@/lib/api');
+
+vi.mock('@/services/StorageService', () => ({
+  storageService: { uploadImage: vi.fn() },
+}));
 
 vi.mock('react-toastify', () => ({
   ToastContainer: () => <div data-testid="toast-container" />,
@@ -24,7 +29,10 @@ vi.mock('react-phone-number-input', () => ({
 vi.mock('@/components/MapPicker/MapPickerComponent', () => ({
   MapPickerComponent: ({ onLocationSelect }: any) => (
     <div data-testid="map-picker">
+      {/* type="button" keeps this control from submitting the form. The real
+          MapPicker renders no button at all. */}
       <button
+        type="button"
         onClick={() => onLocationSelect(-23.5505, -46.6333)}
         data-testid="select-location"
       >
@@ -34,6 +42,8 @@ vi.mock('@/components/MapPicker/MapPickerComponent', () => ({
   ),
 }));
 
+// The phone mock keeps the placeholder of the real PhoneInput, so the tests
+// reach the field with the same selector as the production DOM.
 vi.mock('@/components/InputTelephoneIntl/InputTelephoneIntlComponent', () => ({
   InputTelephoneIntlComponent: React.forwardRef(({ onChange, onBlur, value, name }: any, ref: any) => (
     <input
@@ -43,7 +53,7 @@ vi.mock('@/components/InputTelephoneIntl/InputTelephoneIntlComponent', () => ({
       onChange={(e) => onChange(e.target.value)}
       onBlur={onBlur}
       name={name}
-      placeholder="Phone number"
+      placeholder="Enter phone number"
     />
   )),
 }));
@@ -67,7 +77,7 @@ describe('Location Page', () => {
       expect(screen.getByPlaceholderText('Establishment name')).toBeInTheDocument();
       expect(screen.getByText('-- Please choose an option --')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('Establishment address')).toBeInTheDocument();
-      expect(screen.getByTestId('phone-input')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Enter phone number')).toBeInTheDocument();
       expect(screen.getByTestId('map-picker')).toBeInTheDocument();
     });
 
@@ -204,7 +214,7 @@ describe('Location Page', () => {
       
       await user.type(screen.getByPlaceholderText('Establishment address'), '123 Main St');
       
-      const phoneInput = screen.getByTestId('phone-input');
+      const phoneInput = screen.getByPlaceholderText('Enter phone number');
       await user.type(phoneInput, '+5511987654321');
 
       // Select location on map
@@ -239,7 +249,7 @@ describe('Location Page', () => {
       
       await user.type(screen.getByPlaceholderText('Establishment address'), '123 Main St, São Paulo');
       
-      const phoneInput = screen.getByTestId('phone-input');
+      const phoneInput = screen.getByPlaceholderText('Enter phone number');
       await user.type(phoneInput, '+5511987654321');
 
       // Select location
@@ -287,7 +297,7 @@ describe('Location Page', () => {
       
       await user.type(screen.getByPlaceholderText('Establishment address'), '456 Oak Ave');
       
-      const phoneInput = screen.getByTestId('phone-input');
+      const phoneInput = screen.getByPlaceholderText('Enter phone number');
       await user.type(phoneInput, '+5511999999999');
 
       // Select location
@@ -324,7 +334,7 @@ describe('Location Page', () => {
       
       await user.type(screen.getByPlaceholderText('Establishment address'), '789 Medical Center');
       
-      const phoneInput = screen.getByTestId('phone-input');
+      const phoneInput = screen.getByPlaceholderText('Enter phone number');
       await user.type(phoneInput, '+5511987654321');
 
       // Select location
@@ -340,9 +350,159 @@ describe('Location Page', () => {
       });
     });
 
-    it.skip('should show loading state during submission', async () => {
-      // Skip this test as the button selector is inconsistent
-      // The loading state logic works but is difficult to test reliably
+    it('should disable the share button while the request runs', async () => {
+      vi.mocked(api.get).mockResolvedValue({ data: { name: 'Test User' } });
+      let finishRequest: (value: any) => void = () => {};
+      vi.mocked(api.post).mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            finishRequest = resolve;
+          })
+      );
+
+      const user = userEvent.setup();
+      render(<Location />);
+
+      await user.type(screen.getByPlaceholderText('Establishment name'), 'Hospital');
+      
+      const typeSelect = screen.getByRole('combobox');
+      await user.selectOptions(typeSelect, 'hospital');
+      
+      await user.type(screen.getByPlaceholderText('Establishment address'), '789 Medical Center');
+      
+      const phoneInput = screen.getByPlaceholderText('Enter phone number');
+      await user.type(phoneInput, '+5511987654321');
+
+      await user.click(screen.getByTestId('select-location'));
+
+      const submitButton = screen.getByRole('button', { name: /share/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(submitButton).toBeDisabled();
+      });
+
+      finishRequest({ status: 200 });
+
+      await waitFor(() => {
+        expect(submitButton).toBeEnabled();
+      });
+    });
+
+    it('should log the error message without the request body', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.mocked(api.get).mockResolvedValue({ data: { name: 'Test User' } });
+      vi.mocked(api.post).mockRejectedValue(
+        new Error('Request failed with status code 400')
+      );
+
+      const user = userEvent.setup();
+      render(<Location />);
+
+      await user.type(screen.getByPlaceholderText('Establishment name'), 'Hospital');
+      
+      const typeSelect = screen.getByRole('combobox');
+      await user.selectOptions(typeSelect, 'hospital');
+      
+      await user.type(screen.getByPlaceholderText('Establishment address'), '789 Medical Center');
+      
+      const phoneInput = screen.getByPlaceholderText('Enter phone number');
+      await user.type(phoneInput, '+5511987654321');
+
+      await user.click(screen.getByTestId('select-location'));
+      await user.click(screen.getByRole('button', { name: /share/i }));
+
+      await waitFor(() => {
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          'Unable to post new location /postLocation',
+          'Request failed with status code 400'
+        );
+      });
+
+      const logged = consoleErrorSpy.mock.calls.find(
+        (call) => call[0] === 'Unable to post new location /postLocation'
+      );
+      expect(logged?.[1]).toBeTypeOf('string');
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should show the success message when the API answers 201', async () => {
+      vi.mocked(api.get).mockResolvedValue({ data: { name: 'Test User' } });
+      vi.mocked(api.post).mockResolvedValue({ status: 201 });
+      const { toast } = await import('react-toastify');
+
+      const user = userEvent.setup();
+      render(<Location />);
+
+      await user.type(screen.getByPlaceholderText('Establishment name'), 'Hospital');
+      
+      const typeSelect = screen.getByRole('combobox');
+      await user.selectOptions(typeSelect, 'hospital');
+      
+      await user.type(screen.getByPlaceholderText('Establishment address'), '789 Medical Center');
+      
+      const phoneInput = screen.getByPlaceholderText('Enter phone number');
+      await user.type(phoneInput, '+5511987654321');
+
+      await user.click(screen.getByTestId('select-location'));
+      await user.click(screen.getByRole('button', { name: /share/i }));
+
+      await waitFor(() => {
+        expect(toast.success).toHaveBeenCalledWith(
+          'Location successfully shared! Thank you for helping 🤗'
+        );
+      });
+    });
+
+    it('should clear the form after a successful submission', async () => {
+      vi.mocked(api.get).mockResolvedValue({ data: { name: 'Test User' } });
+      vi.mocked(api.post).mockResolvedValue({ status: 200 });
+      vi.mocked(storageService.uploadImage).mockResolvedValue(
+        'https://bucket.s3.sa-east-1.amazonaws.com/locations/a.webp'
+      );
+
+      const user = userEvent.setup();
+      const { container } = render(<Location />);
+
+      const file = new File(['image'], 'photo.webp', { type: 'image/webp' });
+      const imageInput = container.querySelector(
+        '#image-upload'
+      ) as HTMLInputElement;
+      fireEvent.change(imageInput, { target: { files: [file] } });
+
+      await user.type(screen.getByPlaceholderText('Establishment name'), 'Hospital');
+      
+      const typeSelect = screen.getByRole('combobox');
+      await user.selectOptions(typeSelect, 'hospital');
+      
+      await user.type(screen.getByPlaceholderText('Establishment address'), '789 Medical Center');
+      
+      const phoneInput = screen.getByPlaceholderText('Enter phone number');
+      await user.type(phoneInput, '+5511987654321');
+
+      await user.click(screen.getByTestId('select-location'));
+      await user.click(screen.getByRole('button', { name: /share/i }));
+
+      await waitFor(() => {
+        expect(api.post).toHaveBeenCalledTimes(1);
+      });
+
+      await waitFor(() => {
+        expect(
+          screen.getByPlaceholderText('Establishment name')
+        ).toHaveValue('');
+      });
+      expect(
+        screen.getByPlaceholderText('Establishment address')
+      ).toHaveValue('');
+      expect(phoneInput).toHaveValue('');
+
+      // A second click stops at the empty form, so it sends no request.
+      await user.click(screen.getByRole('button', { name: /share/i }));
+
+      expect(api.post).toHaveBeenCalledTimes(1);
+      expect(storageService.uploadImage).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -371,7 +531,7 @@ describe('Location Page', () => {
         
         await user.type(screen.getByPlaceholderText('Establishment address'), 'Address');
         
-        const phoneInput = screen.getByTestId('phone-input');
+        const phoneInput = screen.getByPlaceholderText('Enter phone number');
         await user.clear(phoneInput);
         await user.type(phoneInput, '+5511999999999');
 
@@ -395,6 +555,145 @@ describe('Location Page', () => {
         const addressInput = screen.getByPlaceholderText('Establishment address');
         await user.clear(addressInput);
       }
+    });
+  });
+
+  describe('Image format', () => {
+    it('accepts a WEBP image and shows the preview', async () => {
+      vi.mocked(api.get).mockResolvedValue({ data: { name: 'Test User' } });
+      const { toast } = await import('react-toastify');
+      const { container } = render(<Location />);
+
+      const file = new File(['image'], 'photo.webp', { type: 'image/webp' });
+      const input = container.querySelector(
+        '#image-upload'
+      ) as HTMLInputElement;
+
+      fireEvent.change(input, { target: { files: [file] } });
+
+      await waitFor(() => {
+        expect(screen.getByAltText('Preview')).toBeInTheDocument();
+      });
+      expect(toast.error).not.toHaveBeenCalled();
+    });
+
+    it('rejects a GIF with a clear message', async () => {
+      vi.mocked(api.get).mockResolvedValue({ data: { name: 'Test User' } });
+      const { toast } = await import('react-toastify');
+      const { container } = render(<Location />);
+
+      const file = new File(['image'], 'photo.gif', { type: 'image/gif' });
+      const input = container.querySelector(
+        '#image-upload'
+      ) as HTMLInputElement;
+
+      fireEvent.change(input, { target: { files: [file] } });
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(
+          'Please upload a valid PNG, JPG or WEBP image.'
+        );
+      });
+    });
+  });
+
+  describe('Image upload on submit', () => {
+    const webpFile = new File(['image'], 'photo.webp', { type: 'image/webp' });
+    const imageUrl =
+      'https://bucket.s3.sa-east-1.amazonaws.com/locations/a.webp';
+
+    async function fillFormWithImage() {
+      vi.mocked(api.get).mockResolvedValue({ data: { name: 'Test User' } });
+
+      const user = userEvent.setup();
+      const { container } = render(<Location />);
+
+      const input = container.querySelector(
+        '#image-upload'
+      ) as HTMLInputElement;
+      fireEvent.change(input, { target: { files: [webpFile] } });
+
+      await user.type(
+        screen.getByPlaceholderText('Establishment name'),
+        'Community Kitchen'
+      );
+      await user.selectOptions(screen.getByRole('combobox'), 'community-kitchen');
+      await user.type(
+        screen.getByPlaceholderText('Establishment address'),
+        '123 Main St'
+      );
+      await user.type(screen.getByPlaceholderText('Enter phone number'), '+5511987654321');
+      await user.click(screen.getByTestId('select-location'));
+
+      return { user };
+    }
+
+    const shareButton = () => screen.getByRole('button', { name: /share/i });
+
+    it('uploads the image and sends its URL to the API', async () => {
+      vi.mocked(api.post).mockResolvedValue({ status: 200 });
+      vi.mocked(storageService.uploadImage).mockResolvedValue(imageUrl);
+
+      const { user } = await fillFormWithImage();
+      await user.click(shareButton());
+
+      await waitFor(() => {
+        expect(storageService.uploadImage).toHaveBeenCalledWith(webpFile);
+      });
+      await waitFor(() => {
+        expect(api.post).toHaveBeenCalledWith(
+          '/pending-locations',
+          expect.objectContaining({ image_url: imageUrl })
+        );
+      });
+    });
+
+    it('shows the upload message and stops when the upload fails', async () => {
+      const { toast } = await import('react-toastify');
+      vi.mocked(storageService.uploadImage).mockRejectedValue(
+        new Error('timeout exceeded')
+      );
+
+      const { user } = await fillFormWithImage();
+      await user.click(shareButton());
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(
+          'Unable to upload the image, please try again. 😓'
+        );
+      });
+      expect(api.post).not.toHaveBeenCalledWith(
+        '/pending-locations',
+        expect.anything()
+      );
+    });
+
+    it('reuses the uploaded URL when the user submits again', async () => {
+      vi.mocked(storageService.uploadImage).mockResolvedValue(imageUrl);
+      vi.mocked(api.post)
+        .mockResolvedValueOnce({ status: 500 })
+        .mockResolvedValueOnce({ status: 200 });
+
+      const { user } = await fillFormWithImage();
+      await user.click(shareButton());
+
+      await waitFor(() => {
+        expect(api.post).toHaveBeenCalledTimes(1);
+      });
+
+      await waitFor(() => {
+        expect(shareButton()).toBeEnabled();
+      });
+      await user.click(shareButton());
+
+      await waitFor(() => {
+        expect(api.post).toHaveBeenCalledTimes(2);
+      });
+      expect(storageService.uploadImage).toHaveBeenCalledTimes(1);
+      expect(api.post).toHaveBeenLastCalledWith(
+        '/pending-locations',
+        expect.objectContaining({ image_url: imageUrl })
+      );
     });
   });
 
